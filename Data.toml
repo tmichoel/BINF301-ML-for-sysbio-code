@@ -1,0 +1,21 @@
+# Version of the data TOML format.
+data_config_version=1
+
+[[datasets]]
+# Some alphanumeric name (can include spaces and underscores)
+name="TCGA_BRCA"
+# Optional description
+description="Gene expression and clinical data from the TCGA breast cancer (BRCA) study (2012). Gene expression data were downloaded from https://gdc.cancer.gov/about-data/publications/brca_2012 (file BRCA.exp.348.med.txt). Clinical data were obtained from https://www.nature.com/articles/nature11412 (Supp Table 1). Genes with missing data were removed from the gene expression data. Samples with gene expression data were selected from the original clinical data, and samples (rows) were aligned between both files."
+
+# A unique ID. Generate with UUIDs.uuid4()
+uuid="20e215cf-1ff9-4cb5-8ed4-a554bd2b654f"
+
+    # Storage location
+    [datasets.storage]
+    # The name of the storage driver.
+    driver="FileSystem"
+    # Data stored in FileSystem is either Blob (a file) or BlobTree (a directory/folder)
+    type="BlobTree"
+    # Path with posix `/` separators.
+    # Use @__DIR__ for paths relative to Data.toml
+    path="@__DIR__/data/exp_pro/TCGA_BRCA"

@@ -26,3 +26,23 @@ using DrWatson
 @quickactivate "BINF301-code"
 ```
 which auto-activate the project and enable local path handling from DrWatson.
+
+## Downloading datasets
+
+To run the notebooks in the `notebooks` folder locally, you need to download and save several datasets in the right location. The datasets are stored on [JuliaHub](https://juliahub.com) and can be downloaded programmatically.
+
+First make sure to import the following packages:
+```julia
+using JuliaHub
+using DataSets
+```
+
+### TCGA breast cancer data
+
+To download the TCGA breast cancer data, issue the following commands in the REPL:
+
+```julia
+ds = JuliaHub.dataset(("tmichoel-1", "TCGA_BRCA"))
+JuliaHub.download_dataset(ds,"data/exp_pro/TCGA_BRCA")
+```
+
