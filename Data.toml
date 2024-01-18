@@ -18,4 +18,4 @@ uuid="20e215cf-1ff9-4cb5-8ed4-a554bd2b654f"
     type="BlobTree"
     # Path with posix `/` separators.
     # Use @__DIR__ for paths relative to Data.toml
-    path="@__DIR__/data/exp_pro/TCGA_BRCA"
+    path="@__DIR__/data/processed/TCGA_BRCA"

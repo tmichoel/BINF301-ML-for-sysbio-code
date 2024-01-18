@@ -29,20 +29,11 @@ which auto-activate the project and enable local path handling from DrWatson.
 
 ## Downloading datasets
 
-To run the notebooks in the `notebooks` folder locally, you need to download and save several datasets in the right location. The datasets are stored on [JuliaHub](https://juliahub.com) and can be downloaded programmatically.
+To run the notebooks in the `notebooks` folder locally, you need to download and save several datasets in the right location. The datasets are stored on [JuliaHub](https://juliahub.com) and can be downloaded by running the `download_processed_data.jl` script in the `src` folder. After downloading, the datasets will be saved in the `data/processed` folder.
 
-First make sure to import the following packages:
-```julia
-using JuliaHub
-using DataSets
-```
+## Running notebooks locally
 
-### TCGA breast cancer data
+The files in the `notebooks` folder are [Pluto](https://plutojl.org/) notebooks. They are copies of the same notebooks available on [JuliaHub](https://juliahub.com). To make the same notebook run both on [JuliaHub](https://juliahub.com) and locally, the [DataSets](https://github.com/JuliaComputing/DataSets.jl) package is used to load data. This requires that you save a copy of the `Data.toml` file in the directory `~/.julia/datasets` (or `joinpath(homedir(), ".julia", "datasets") on windows`).
 
-To download the TCGA breast cancer data, issue the following commands in the REPL:
 
-```julia
-ds = JuliaHub.dataset(("tmichoel-1", "TCGA_BRCA"))
-JuliaHub.download_dataset(ds,"data/exp_pro/TCGA_BRCA")
-```
 
