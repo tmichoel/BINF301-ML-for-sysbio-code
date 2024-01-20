@@ -5,5 +5,7 @@ using JuliaHub
 using DataSets
 
 # Download the processed TCGA breast cancer data from JuliaHub
-ds = JuliaHub.dataset(("tmichoel-1", "TCGA_BRCA"))
-JuliaHub.download_dataset(ds,datadir("processed","TCGA_BRCA"))
+JuliaHub.download_dataset(JuliaHub.dataset(("tmichoel-1", "TCGA_BRCA")), datadir("processed","TCGA_BRCA"))
+
+# Download the processed CCLE data from JuliaHub
+JuliaHub.download_dataset(JuliaHub.dataset(("tmichoel-1", "CCLE")), datadir("processed","CCLE"))
