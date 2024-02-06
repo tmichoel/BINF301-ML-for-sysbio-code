@@ -49,12 +49,12 @@ DataSets.load_project!(projectdir("Data.toml"))
 tree = DataSets.open(dataset("CCLE"));
 
 # ╔═╡ 84f0d28e-b7bd-439c-a0cf-f24d84ffa88d
-df_sens = open(Vector{UInt8}, tree["CCLE-ActArea.csv"]) do buf
+Y = open(Vector{UInt8}, tree["CCLE-ActArea.csv"]) do buf
            CSV.read(buf, DataFrame);
        end;
 
 # ╔═╡ 2da47d13-1046-4df0-9c22-1db5445a4dfd
-df_expr = open(Vector{UInt8}, tree["CCLE-expr.csv"]) do buf
+X = open(Vector{UInt8}, tree["CCLE-expr.csv"]) do buf
            CSV.read(buf, DataFrame)
        end;
 
@@ -75,19 +75,17 @@ We will use the elastic net regressin implementation of the [MLJLinearModels.jl]
 # ╔═╡ 2bef1d79-014e-42ec-b1b5-fe9ecf344a95
 doc("ElasticNetRegressor",pkg="MLJLinearModels");
 
-# ╔═╡ 1665c3fa-1be6-4359-ad1b-ec419f708d27
+# ╔═╡ bb437a19-be1d-4145-8dc1-be53584b69fb
 md"
-Instantiate a model with default parameters:
+It is generally recommended to standardize features for elastic net regression, but one must be careful: if the entire dataset is standardized before splitting into training and testing samples, information will have leaked from the train to the test data (because the mean and standard deviation are computed on the combined train and test data). In other words, when evaluating a model fitted on standardized training data, the test data must be transformed using the means and standard deviations of the features in the training data! In MLJ, we can accomplish this quite neatly by [composing models](https://alan-turing-institute.github.io/MLJ.jl/dev/composing_models/).
+
+When an elastic net regression model is fitted to centred data (features having mean zero) and the intercept term is not penalized, the intercept estimate will be the mean (over the training samples) of the target variable. Hence there is not really a need to standardize the target variable, but to illustrate how this is done in MLJ (using a [target transformation](https://alan-turing-institute.github.io/MLJ.jl/dev/target_transformations/), we do it anyway.
+
+Hence we create a [linear pipeline](https://alan-turing-institute.github.io/MLJ.jl/dev/linear_pipelines/) consisting of a standardizer followed by an elastic net regressor, wrapped in a [TransformedTargetModel](https://alan-turing-institute.github.io/MLJ.jl/dev/target_transformations/#MLJBase.TransformedTargetModel):
 "
 
-# ╔═╡ fb53a425-5b1a-4a3c-bcb6-390757ef8f83
-md"We will need the expression data in Matrix format for training models:"
-
-# ╔═╡ 828f070c-c703-41a5-9fe4-3842e4627f5f
-X = Matrix(df_expr);
-
-# ╔═╡ 35fa5314-e7e3-4caf-b0d6-5bd888c578d6
-histogram(mean(X,dims=1))
+# ╔═╡ 0e426484-b4a2-4488-8838-9991d75c0512
+elnet_std = TransformedTargetModel( Pipeline(Standardizer(), ElasticNetRegressor()) , transformer=Standardizer())
 
 # ╔═╡ f7799446-46f7-40b1-92f1-914818691bcc
 md"
@@ -99,18 +97,27 @@ Create a vector with response data:
 "
 
 # ╔═╡ d0ab14b7-335a-4e02-9a3f-838b6b244be0
-y = df_sens.:"PD-0325901";
+y = Array(Y.:"PD-0325901");
 
-# ╔═╡ 10cd0ee7-27de-4ff6-a7ba-3cdd80749133
-# ╠═╡ show_logs = false
-ElNetReg = @load "ElasticNetRegressor" pkg="MLJLinearModels"
-
-# ╔═╡ 963c2d86-33f9-4bba-a1c8-3fc438c1f287
-elnet = ElNetReg()
+# ╔═╡ eb00ec56-2a2f-4e34-8a1f-64e2e27412dc
+md"
+We can now bind our model pipeline to the data:
+"
 
 # ╔═╡ 904a9853-c85f-40c7-b326-492d2ea92e44
 # ╠═╡ show_logs = false
-mach = machine(elnet, X, y)
+mach = machine(elnet_std, X, y);
+
+# ╔═╡ 5406c51f-488d-4db6-97c4-191f31a31173
+md"
+We will train a model on 80% of the samples and test it on the remaining 20%:
+"
+
+# ╔═╡ b76c66be-75b6-402b-9b3b-eca64b585cf1
+train, test = partition(shuffle(eachindex(y)), 0.8);
+
+# ╔═╡ 98d2c3c8-2b55-468b-8791-aed3cc718335
+fit!(mach, rows=train);
 
 # ╔═╡ Cell order:
 # ╟─ad1f0212-c412-11ee-220f-391425de7e32
@@ -126,12 +133,12 @@ mach = machine(elnet, X, y)
 # ╟─f8fa0306-e9b1-469d-89ba-ee114d8c4d72
 # ╟─3279787c-4e25-4817-bae3-a6b065a8b07b
 # ╠═2bef1d79-014e-42ec-b1b5-fe9ecf344a95
-# ╟─1665c3fa-1be6-4359-ad1b-ec419f708d27
-# ╠═963c2d86-33f9-4bba-a1c8-3fc438c1f287
-# ╟─fb53a425-5b1a-4a3c-bcb6-390757ef8f83
-# ╠═828f070c-c703-41a5-9fe4-3842e4627f5f
-# ╠═35fa5314-e7e3-4caf-b0d6-5bd888c578d6
+# ╟─bb437a19-be1d-4145-8dc1-be53584b69fb
+# ╠═0e426484-b4a2-4488-8838-9991d75c0512
 # ╟─f7799446-46f7-40b1-92f1-914818691bcc
 # ╠═d0ab14b7-335a-4e02-9a3f-838b6b244be0
-# ╠═10cd0ee7-27de-4ff6-a7ba-3cdd80749133
+# ╟─eb00ec56-2a2f-4e34-8a1f-64e2e27412dc
 # ╠═904a9853-c85f-40c7-b326-492d2ea92e44
+# ╟─5406c51f-488d-4db6-97c4-191f31a31173
+# ╠═b76c66be-75b6-402b-9b3b-eca64b585cf1
+# ╠═98d2c3c8-2b55-468b-8791-aed3cc718335
