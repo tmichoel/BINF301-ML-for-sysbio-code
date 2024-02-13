@@ -39,6 +39,25 @@ rename!(df,map(x -> x[1: findfirst('_',x)-1], names(df)))
 rename!(df, :Sample => :Cell_line);
 
 """
+Save Entrez gene ids to file for id conversion
+"""
+entrez_id = DataFrame(ENTREZID = names(df)[2:end]);
+CSV.write(datadir("raw","CCLE","CCLE-entrez.csv"),entrez_id);
+
+"""
+Read ID conversion file from SynGO
+"""
+fentrez = datadir("raw","CCLE","SynGO_id_convert_2024-02-13","idmap.csv");
+df_entrez = DataFrame(CSV.File(fentrez));
+df_entrez.query = string.(df_entrez.query);
+rename!(df_entrez, :query => :ENTREZID);
+
+leftjoin!(entrez_id, df_entrez, on=:ENTREZID);
+tf = ismissing.(entrez_id.symbol);
+entrez_id.symbol[tf] .= entrez_id.ENTREZID[tf];
+
+
+"""
 DRUG SENSITIVITY DATA
 
 Convert the drug sensitivity file manually to XLSX format and save the result to a new file:
