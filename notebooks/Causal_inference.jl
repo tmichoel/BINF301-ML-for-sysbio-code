@@ -19,7 +19,7 @@ begin
 	using DataFrames
 	using GLM
 	using LinearAlgebra
-	#using CairoMakie
+	using CairoMakie
 	using LaTeXStrings
 end
 
@@ -51,6 +51,7 @@ To restrict the space of possible models that need to be considered, a number of
 
 If we assume that there are **no unobserved factors**, there are 5 possible models satisfying assumptions 1-4 (see figure below). If we allow for the **presence of unobserved factors**, we have the same 5 models with an additional unobserved ``U`` having a causal effect on ``X`` and ``Y``, plus one more model without an edge between ``X`` and ``Y`` where all of their correlation is explained by ``U`` (see figure).
 
+![Causal models figure]()
 
 Below each model in the figure, some of the key conditional independences implied by the model are shown, using the mathematical notation ``⫫`` for "is independent of", ``∣`` for "conditional on", ``∧`` for "and", and ``¬`` for "it is not the case that".
 
@@ -122,6 +123,440 @@ md"""
 To simulate data for ``X`` and ``Y``, we must first set up the [structural equations](https://en.wikipedia.org/wiki/Structural_equation_modeling) for the [causal model](https://en.wikipedia.org/wiki/Causal_model) we want to simulate. We will assume linear models with additive Gaussian noise throughout. 
 
 Let's start by models 1a, 1b, and 6b. Their structural equations can be written as 
+
+```math
+\begin{align}
+X &= a Z + U_X\\\\
+Y &= b X + U_Y
+\end{align}
+```
+
+where ``U_X`` and ``U_Y`` are normally distributed errors with joint distribution
+
+```math
+(U_X, U_Y)^T \sim {\cal N}(0,Σ_{U})
+```
+
+with covariance matrix 
+
+```math
+Σ_{U} = 
+\begin{pmatrix}
+1 & ρ\\\\
+ρ & 1
+\end{pmatrix}
+```
+
+In model 1a, the errors are uncorrelated, ``\rho=0``, and we arbitrarily set the errors to have unit variance. In model 1b, the unobserved confounder ``U`` has the effect of correlating the errors, that is ``0<\rho<1``. In model 6b, the errors are also correlated, ``0<\rho<1``, but there is no direct effect of ``X`` on ``Y``, that is ``b=0``.
+
+The parameters ``a`` and ``b`` are the causal effect sizes, and their magnitudes should be interpreted relative to the unit standard deviation of the random errors. In other words, each additional alternative allele shifts the mean of ``X`` by ``a`` standard deviations of the random errors.
+
+Given a value ``Z=z``, eqs. (1)--(2) can be rewritten in matrix-vector notation as
+
+```math
+\begin{pmatrix}
+X\\\\
+Y
+\end{pmatrix}
+= 
+\begin{pmatrix}
+ az \\\\
+ abz 
+\end{pmatrix} +
+\begin{pmatrix}
+ 1 & 0\\\\
+ b  & 1
+\end{pmatrix}
+\begin{pmatrix}
+U_X\\\\
+U_Y
+\end{pmatrix}
+```
+
+Using [properties of the multivariate normal distribution](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Affine_transformation), it follows that 
+
+```math
+\begin{equation}
+\begin{pmatrix}
+X\\\\
+Y 
+\end{pmatrix} \mid Z=z 
+∼ {\cal N} \left( \mu_z, Σ_{XY} \right)
+\end{equation}
+```
+
+with
+
+```math
+\begin{align*}
+\mu_z &= \begin{pmatrix}
+ az \\\\
+ abz 
+\end{pmatrix} \\\\
+Σ_{XY} &=
+\begin{pmatrix}
+ 1 & 0\\\\
+ b  & 1
+\end{pmatrix} 
+\begin{pmatrix}
+ 1 & ρ\\\\
+ ρ  & 1
+\end{pmatrix}
+\begin{pmatrix}
+ 1 & b \\\\
+ 0  & 1
+\end{pmatrix}
+= \begin{pmatrix}
+ 1 & b+ρ\\\\
+ b+ρ  & b^2 + 2b\rho + 1
+\end{pmatrix}
+\end{align*}
+```
+
+Hence given a sampled genotype value ``Z``, we can sample values for ``X`` and ``Y`` by sampling from the multivariate normal distribution (3). In fact, [julia](https://julialang.org/) knows how to do calculus with [distributions](https://juliastats.org/Distributions.jl/stable/), and we only need to specify the distribution of the random errors and the affine matrix-vector transformation:
+"""
+
+# ╔═╡ 91393a06-ebfd-4591-b384-42a1476edf44
+function sample_XcauseY(Z,a=1.0,b=0.8,rho=0.0)
+    # number of samples
+    N = length(Z)
+    # Covariance matrix for the unmodelled factors
+    covU = [1.0 rho
+            rho 1.0]
+    # distribution of the unmodelled factors
+    distU = MvNormal(covU)
+    # the covariance between X and Y due to direct and unmodelled effects
+    B = [1. 0.
+         b  1.]
+    distXY = B * distU
+    # sample XY expression levels from model 1a, 1b, or 6b, depending on the values of rho and b
+    XY = [a*Z a*b*Z] + rand(distXY,N)'
+    return XY
+end
+
+# ╔═╡ af52e7a1-2600-4b61-a36b-3267d536c683
+md"""
+**Your turn:** Can you derive and implement the structural equations for the other models? 
+
+The function to sample from models 3a or 3b is as follows:
+"""
+
+# ╔═╡ 1c16578d-50de-43b4-a390-41e6b06af629
+function sample_GcauseXY(Z,a=1.0,b=0.8,rho=0.0)
+    # number of samples
+    N = length(Z)
+    # Covariance matrix for the unmodelled factors
+    covU = [1.0 rho
+            rho 1.0]
+    # distribution of unmodelled factors
+    distU = MvNormal(covU)
+    # sample XY expression levels from model 3a or 3b, depending on the value of rho
+    XY = [a*Z b*Z] + rand(distU,N)'
+    return XY
+end
+
+# ╔═╡ c42be534-7013-4296-9b38-b162619d0dcc
+md"Now sample some data:"
+
+# ╔═╡ b16a9699-b5f6-4c1e-a42d-bf1abd2022ee
+begin
+	XY1a = sample_XcauseY(Z,1.,0.8,0.) # sample from model 1a
+	XY1b = sample_XcauseY(Z,1.,0.8,0.4) # sample from model 1b
+	XY6b = sample_XcauseY(Z,1.,0.,0.4); # sample from model 6b
+	XY3a = sample_GcauseXY(Z,1.,0.8,0.) # sample from model 3a
+	XY3b = sample_GcauseXY(Z,1.,0.8,0.4); # sample from model 3b
+end;
+
+# ╔═╡ d58eea8e-b606-4fe4-977b-adba099e253a
+md"Let's collect all our data in a dataframe:"
+
+# ╔═╡ 34d3f0cb-6da1-44e4-9e24-f8548437f297
+data = DataFrame(Z0=Z0, Z=Z, 
+            X1a=XY1a[:,1], Y1a=XY1a[:,2],
+            X1b=XY1b[:,1], Y1b=XY1b[:,2],
+            X6b=XY6b[:,1], Y6b=XY6b[:,2],
+            X3a=XY3a[:,1], Y3a=XY3a[:,2],
+            X3b=XY3b[:,1], Y3b=XY3b[:,2])
+
+# ╔═╡ 1d1da293-146a-4c59-a3ba-02256252e4f3
+md"We can visualize the data using scatter plots of ``X`` and ``Y`` colored by genotype value:"
+
+# ╔═╡ cf9fd27e-079d-4a31-b20c-92e68a145ee2
+begin
+	f1 = Figure()
+	figttl = ["Model 1a", "Model 1b", "Model 6b", "Model 3a", "Model 3b"]
+	rowid = [1, 1, 1, 2, 2]
+	colid = [1, 2, 3, 1, 2]
+	for k=1:5
+	    ax = Axis(f1[rowid[k],colid[k]], xlabel="x", ylabel="y", 
+	        title=figttl[k],
+	        aspect=AxisAspect(1))
+	    hidespines!(ax)
+	
+	    scatter!(data[data.Z0.==0,2*k+1],data[data.Z0.==0,2*k+2],
+	        label="z=0", marker=:circle, color=:black, 
+	        markersize=7)
+	    scatter!(data[data.Z0.==1,2*k+1],data[data.Z0.==1,2*k+2],
+	        label="z=1", marker=:xcross, color=:lightblue, 
+	        markersize=12)
+	    scatter!(data[data.Z0.==2,2*k+1],data[data.Z0.==2,2*k+2], 
+	        label="z=2", marker=:cross, color =:red, 
+	        markersize=12)
+	
+	    f1[2,3] = Legend(f1, ax, "Genotype", 
+	        framevisible = false, 
+	        tellheight=false, tellwidth=false,
+	        halign=:left, valign=:bottom)
+	end   
+	f1
+end
+
+# ╔═╡ af0cdb77-ed1d-46e3-8672-5e4bcb37df2c
+md"""
+## Model selection
+
+### Testing the sufficient condition for ``X\to Y``
+
+For the sufficient condition we have to test whether ``Z`` and ``Y`` are dependent and whether this dependence disappears after conditioning on ``X``. If we assume linear models, these tests can be performed by standard least squares regression and testing for non-zero coefficients.
+
+#### Testing data generated by Model 1a
+
+First we test whether ``Z`` and ``Y`` are dependent by regressing ``Y`` on ``Z``. Note that by construction ``Y`` and ``Z`` are samples from random variables with zero mean and hence we don't include an intercept in the regression:
+"""
+
+# ╔═╡ 4a68ebbc-9cc1-4b0d-9e1d-1e8b737e1c0c
+yg1a = lm(@formula(Y1a ~ 0 + Z),data)
+
+# ╔═╡ 12393fdd-2950-409c-bea0-d7c06b86aa2a
+md"""
+From the small ``p``-value we can reject the null hypothesis of no dependence between ``Y`` and ``Z``, and hence we conclude that the first test is passed.
+
+Next we test whether ``Z`` and ``Y`` become independent after conditioning on ``X``, that is, after regressing out ``X`` from ``Y``:
+"""
+
+# ╔═╡ 7f6553ee-5219-4aa9-8e46-3f90ac979d48
+yx1a = lm(@formula(Y1a ~ 0 + X1a),data)
+
+# ╔═╡ 2faf3fd1-4730-43e3-afa6-7f22a605fef7
+md"The residuals of the regression of ``Y`` on ``X`` can now be tested for association with ``Z``:"
+
+# ╔═╡ 0d946d7c-8f83-4a11-8fe2-2e995503e336
+data.residYX1a = residuals(yx1a);
+
+# ╔═╡ e9415434-b9f9-4ae5-976f-aac0329bb415
+ygx1a = lm(@formula(residYX1a ~ 0 + Z),data)
+
+# ╔═╡ 75b9f976-4a46-4e32-9bb7-2b85b75439d2
+md"""
+Clearly the null hypothesis of no association *cannot* be rejected, and we conclude that the second test has also been passed.
+
+In conclusion, the data satisfies the sufficient condition for causality and we conclude (correctly) that it has been generated by a causal model with an edge ``X\to Y`` (a **true positive** result).
+
+#### Testing data generated by Model 1b
+
+We repeat the same procedure for the data generated by model 1b:
+"""
+
+# ╔═╡ 4601563e-6014-4553-a5a2-5c0ab0363c32
+yg1b = lm(@formula(Y1b ~ 0 + Z),data)
+
+# ╔═╡ a1cff83a-506f-4612-885c-e59796d72c69
+md"""
+From the small ``p``-value we can again reject the null hypothesis of no dependence between ``Y`` and ``Z``, and hence we conclude that the first test is passed.
+
+Next we regress out ``X`` from ``Y``, and test the residuals for association with ``Z``:
+"""
+
+# ╔═╡ 5062bb4a-5b38-474b-8ea6-88e0520f9dc0
+yx1b = lm(@formula(Y1b ~ 0 + X1b),data)
+
+# ╔═╡ dea6146e-f91d-4856-a500-646096e326c9
+data.residYX1b = residuals(yx1b);
+
+# ╔═╡ 2a13fa90-ab34-4574-aebb-4c2432824341
+ygx1b = lm(@formula(residYX1b ~ 0 + Z),data)
+
+# ╔═╡ f963ae98-0c9c-4c22-9a94-15c4f0550742
+md"""
+This time we have to reject the null hypothesis of no association because of the small ``p``-value, and we conclude that the second test has *not* been passed.
+
+In conclusion, the data does *not* satisfy the sufficient condition for causality and we conclude (wrongly) that it has *not* been generated by a causal model with an edge ``X\to Y`` (a **false negative** result).
+
+
+#### Testing data generated by Model 6b
+
+We repeat the  procedure one more time for the data generated by model 6b:
+"""
+
+# ╔═╡ 749af8ff-4121-4270-87b3-ed171a5a6438
+yg6b = lm(@formula(Y6b ~ 0 + Z),data)
+
+# ╔═╡ 25be27e8-84f1-48f8-8792-86c157912ba2
+md"""
+This time we *cannot* reject the null hypothesis of no dependence between ``Y`` and ``Z``, and hence we conclude that the first test has *not* passed.
+
+We can conclude immediately that the data does *not* satisfy the sufficient condition for causality and we conclude (correctly) that it has *not* been generated by a causal model with an edge ``X\to Y`` (a **true negative** result).
+
+#### Your turn
+
+Repeat the analysis of the sufficient condition for the data generated by model 3a and 3b. What do you conclude and are those conclusions correct or not?
+
+### Testing the necessary condition for ``X\to Y``
+
+For the necessary condition we have to test whether ``Z`` and ``Y`` are dependent and whether ``X`` and ``Y`` become independent after conditioning on ``Z``. Assuming linear models, these tests can again be performed by least squares regression and testing for non-zero coefficients.
+
+#### Testing data generated by Model 1b
+
+As before, we test whether ``Z`` and ``Y`` are dependent by regressing ``Y`` on ``Z``:
+
+"""
+
+# ╔═╡ 3225080f-9d1d-4186-bcc5-939f18e5bfd9
+yg1b
+
+# ╔═╡ 450e4589-e08a-4b57-af5e-faf64a2c3938
+md"""
+From the small ``p``-value we can again reject the null hypothesis of no dependence between ``Y`` and ``Z``, and hence we conclude that the first test is passed.
+
+Next we also regress ``X`` on ``Z``, and test the residuals of both regressions for association with each other:
+"""
+
+# ╔═╡ 8eff4cf2-0c8a-44c2-94bc-e42da9beba39
+xg1b = lm(@formula(X1b ~ 0 + Z),data)
+
+# ╔═╡ dd07ff3c-a8c5-4637-880a-fc840b0b817b
+data.residGY1b = residuals(yg1b);
+
+# ╔═╡ 35d551dc-0dd0-4505-ac3d-0e6b03a48aa0
+data.residGX1b = residuals(xg1b);
+
+# ╔═╡ a834d8de-05c7-40cf-b166-9b736ae86c4b
+ygxr1b = lm(@formula(residGY1b ~ 0 + residGX1b),data)
+
+# ╔═╡ 1509c5db-1c16-4f9c-9882-a4d6bf8baae7
+md"""
+From the small ``p``-value we can reject the null hypothesis of no dependence between the residuals, and hence we conclude that the second test has also been passed.
+
+In conclusion, the data satisfiess the necessary condition for causality and we conclude (correctly) that it has been generated by a causal model with an edge ``X\to Y`` (a **true positive** result).
+
+## Testing data generated by Model 3a
+
+We repeat the same procedure for the data generated by model 3a:
+"""
+
+# ╔═╡ 5bbfab05-63f6-4715-a640-f4087d65f2e8
+yg3a = lm(@formula(Y3a ~ 0 + Z),data)
+
+# ╔═╡ 594aacfd-a162-4d30-8e96-5866455cbdb8
+md"""
+From the small ``p``-value we can again reject the null hypothesis of no dependence between ``Y`` and ``Z``, and hence we conclude that the first test is passed.
+
+Next we again regress ``X`` on ``Z``, and test the residuals of both regressions for association with each other:
+"""
+
+# ╔═╡ 8eaf1798-963b-4a0e-9a13-bec65a6f9b5e
+xg3a = lm(@formula(X3a ~ 0 + Z),data)
+
+# ╔═╡ 359d9ca1-4c25-4254-9415-f40e445e475a
+data.residGY3a = residuals(yg3a);
+
+# ╔═╡ 820a474c-e254-4123-8f12-2cab813eda7a
+data.residGX3a = residuals(xg3a);
+
+# ╔═╡ ac200dd3-5a40-4741-ae11-bd7e8f289187
+ygxr3a = lm(@formula(residGY3a ~ 0 + residGX3a),data)
+
+# ╔═╡ a82ea472-1b30-49b6-9d90-19d421db053e
+md"""
+This time we *cannot* reject the null hypothesis of no dependence between the residuals, and hence we conclude that the second test has *not* been passed.
+
+In conclusion, the data does *not* satisfy the necessary condition for causality and we conclude (correctly) that it has *not* been generated by a causal model with an edge ``X\to Y`` (a **true negative** result).
+
+#### Testing data generated by Model 3b
+
+We repeat the same procedure for the data generated by model 3b:
+"""
+
+# ╔═╡ e6e3dd20-afc6-4d01-9721-ea7aee36352d
+yg3b = lm(@formula(Y3b ~ 0 + Z),data)
+
+# ╔═╡ 2466cb39-091d-44e1-8d34-bdaa4592ae4e
+md"""
+From the small ``p``-value we can again reject the null hypothesis of no dependence between ``Y`` and ``Z``, and hence we conclude that the first test is passed.
+
+Next we again regress ``X`` on ``Z``, and test the residuals of both regressions for association with each other:
+"""
+
+# ╔═╡ 383b22a4-79e7-4e6c-a2f6-3396d5b19354
+xg3b = lm(@formula(X3b ~ 0 + Z),data)
+
+# ╔═╡ 7d6e1cd0-2ba9-4397-8c58-f431a5065dbe
+data.residGY3b = residuals(yg3b);
+
+# ╔═╡ c213d3d0-f491-4c73-bb83-855988eb9d49
+data.residGX3b = residuals(xg3b);
+
+# ╔═╡ 031d227d-f4bf-45c3-b743-349975e3cb8d
+ygxr3b = lm(@formula(residGY3b ~ 0 + residGX3b),data)
+
+# ╔═╡ 6b4ea2c9-d069-40df-9375-36ccb36facf3
+md"""
+Because of the small ``p``-value we must reject the null hypothesis of no dependence between the residuals, and hence we conclude that the second test has also passed.
+
+In conclusion, the data satisfies the necessary condition for causality and we conclude (wrongly) that it has been generated by a causal model with an edge ``X\to Y`` (a **false positive** result).
+
+"""
+
+# ╔═╡ 4a304522-a005-4aea-97e3-64ab69e8c42b
+md"""
+## Your turn
+
+Repeat the analysis of the sufficient condition for the data generated by model 1a and 6b. What do you conclude and are those conclusions correct or not?
+
+### Some comments and further reading
+
+#### Which condition for causality to choose?
+
+Despite the simplicity of these examples they show the full spectrum of what to expect from these approaches to causal inference from molecular QTL data. It is important to stress that the false negative and false positive findings are not due to any errors in the tests themselves, misspecifications of the model (the models used to generate and fit the data are identical) or measurement noise (none was added in the simulations). Instead it is a basic mathematical truth that a condition for causality that is sufficient but not necessary will be prone to false negative predictions, whereas a condition that is necessary but not sufficient will be prone to false positive predictions.
+
+Whether to use the sufficient or the necessary condition in concrete applications depends on a number of considerations:
+
+- Is it more important to generate only high-confidence predictions before performing expensive experimental validation, or is it more important not to miss any real causal interactions before applying additional filtering steps?
+
+- Do you expect that unknown confounders play a major or minor role in your data? For instance, in gene regulatory networks (GRNs) feedforward loops (where a transcription factor (TF) and its target are coregulated by a 2nd TF) are common, and therefore the necessary condition systematically outperforms the sufficient condition for reconstructing GRNs, see for instance these papers:
+
+  - [Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data](https://doi.org/10.1371/journal.pcbi.1005703).
+  - [Comparison between instrumental variable and mediation-based methods for reconstructing causal gene networks in yeast](https://doi.org/10.1039/D0MO00140F)
+
+- How precise are your measurements? The sufficient condition is not only susceptible to hidden confounders, but also to measurement noise, which further increases its false negative rate (see the first paper above for details). 
+
+#### How to quantify statistical significance and uncertainty?
+
+In the examples above, we basically eye-balled the ``p``-values and gave thumbs-up or thumbs-down for a causal relation. Not only is this practically infeasible when testing causality between ten-thousands of pairs in omics data, we would also like to quantify the statistical significance and uncertainty of each finding. This turns out to be a non-trivial question, because:
+
+- Both the sufficient and necessary condition are *combinations* of statistical tests.
+- The necessary condition includes a test where *accepting* the null hypothesis is a *positive* finding, but a non-significant ``p``-value (no evidence for rejecting the null hypothesis) does not imply significant evidence against the alternative hypothesis.
+
+
+One strand of research has focused on summarizing the outcome of multiple hypothesis tests by a single ``p``-value with the usual interpretation that a small ``p``-value is evidence for rejecting the null hypothesis of no causal interaction, see these papers:
+
+- [Disentangling molecular relationships with a causal inference test](https://doi.org/10.1186/1471-2156-10-23)
+- [Modeling Causality for Pairs of Phenotypes in System Genetics](https://doi.org/10.1534/genetics.112.147124)
+- [cit: hypothesis testing software for mediation analysis in genomic applications ](https://doi.org/10.1093/bioinformatics/btw135)
+
+However, to overcome in particular the second problem above, these methods have to introduce pairwise model comparison statistics almost by stealth. A much better approach (in my not so objective opinion!) is to do this explicitly in a Bayesian framework.
+
+In the papers below, each of the component tests (for instance, ``¬(Z⫫Y)`` or ``Z⫫Y\mid X`` in the sufficient condition) is expressed as a [likelihood-ratio test](https://en.wikipedia.org/wiki/Likelihood-ratio_test) between two nested, null and alternative, models. Using [``q``-values](https://en.wikipedia.org/wiki/Q-value_(statistics)), the likelihood-ratio test statistics are converted into probabilities of the null or alternative model being true. These probabilities can then be combined by the usual rules of probability theory (e.g., multiplied to express that two tests must be true). 
+
+- [Harnessing naturally randomized transcription to infer regulatory relationships among genes](https://doi.org/10.1186/gb-2007-8-10-r219)
+- [Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data](https://doi.org/10.1371/journal.pcbi.1005703)
+
+In addition, the second paper provides a software implementation that is highly efficient, and can test both the sufficient and the necessary condition for causality (all other papers essentially only study the sufficient condition).
+
+#### Your turn?
+
+If you are convinced by the above arguments and have some molecular QTL data waiting to be analyzed by causal inference, try our [Findr software](https://github.com/tmichoel/BioFindr.jl).
+
 """
 
 # ╔═╡ Cell order:
@@ -136,3 +571,50 @@ Let's start by models 1a, 1b, and 6b. Their structural equations can be written 
 # ╟─27e33a19-8bd8-482c-825f-b08bf121b94e
 # ╠═ae6ecc6c-6cbc-4da6-bacd-c0fa60845dd2
 # ╟─590eece9-3e35-4cf7-9d2d-059d16dad0c4
+# ╠═91393a06-ebfd-4591-b384-42a1476edf44
+# ╟─af52e7a1-2600-4b61-a36b-3267d536c683
+# ╠═1c16578d-50de-43b4-a390-41e6b06af629
+# ╟─c42be534-7013-4296-9b38-b162619d0dcc
+# ╠═b16a9699-b5f6-4c1e-a42d-bf1abd2022ee
+# ╟─d58eea8e-b606-4fe4-977b-adba099e253a
+# ╠═34d3f0cb-6da1-44e4-9e24-f8548437f297
+# ╟─1d1da293-146a-4c59-a3ba-02256252e4f3
+# ╟─cf9fd27e-079d-4a31-b20c-92e68a145ee2
+# ╟─af0cdb77-ed1d-46e3-8672-5e4bcb37df2c
+# ╠═4a68ebbc-9cc1-4b0d-9e1d-1e8b737e1c0c
+# ╟─12393fdd-2950-409c-bea0-d7c06b86aa2a
+# ╠═7f6553ee-5219-4aa9-8e46-3f90ac979d48
+# ╟─2faf3fd1-4730-43e3-afa6-7f22a605fef7
+# ╠═0d946d7c-8f83-4a11-8fe2-2e995503e336
+# ╠═e9415434-b9f9-4ae5-976f-aac0329bb415
+# ╟─75b9f976-4a46-4e32-9bb7-2b85b75439d2
+# ╠═4601563e-6014-4553-a5a2-5c0ab0363c32
+# ╟─a1cff83a-506f-4612-885c-e59796d72c69
+# ╠═5062bb4a-5b38-474b-8ea6-88e0520f9dc0
+# ╠═dea6146e-f91d-4856-a500-646096e326c9
+# ╠═2a13fa90-ab34-4574-aebb-4c2432824341
+# ╟─f963ae98-0c9c-4c22-9a94-15c4f0550742
+# ╠═749af8ff-4121-4270-87b3-ed171a5a6438
+# ╟─25be27e8-84f1-48f8-8792-86c157912ba2
+# ╠═3225080f-9d1d-4186-bcc5-939f18e5bfd9
+# ╟─450e4589-e08a-4b57-af5e-faf64a2c3938
+# ╠═8eff4cf2-0c8a-44c2-94bc-e42da9beba39
+# ╠═dd07ff3c-a8c5-4637-880a-fc840b0b817b
+# ╠═35d551dc-0dd0-4505-ac3d-0e6b03a48aa0
+# ╠═a834d8de-05c7-40cf-b166-9b736ae86c4b
+# ╟─1509c5db-1c16-4f9c-9882-a4d6bf8baae7
+# ╠═5bbfab05-63f6-4715-a640-f4087d65f2e8
+# ╟─594aacfd-a162-4d30-8e96-5866455cbdb8
+# ╠═8eaf1798-963b-4a0e-9a13-bec65a6f9b5e
+# ╠═359d9ca1-4c25-4254-9415-f40e445e475a
+# ╠═820a474c-e254-4123-8f12-2cab813eda7a
+# ╠═ac200dd3-5a40-4741-ae11-bd7e8f289187
+# ╟─a82ea472-1b30-49b6-9d90-19d421db053e
+# ╠═e6e3dd20-afc6-4d01-9721-ea7aee36352d
+# ╟─2466cb39-091d-44e1-8d34-bdaa4592ae4e
+# ╠═383b22a4-79e7-4e6c-a2f6-3396d5b19354
+# ╠═7d6e1cd0-2ba9-4397-8c58-f431a5065dbe
+# ╠═c213d3d0-f491-4c73-bb83-855988eb9d49
+# ╠═031d227d-f4bf-45c3-b743-349975e3cb8d
+# ╟─6b4ea2c9-d069-40df-9375-36ccb36facf3
+# ╟─4a304522-a005-4aea-97e3-64ab69e8c42b
