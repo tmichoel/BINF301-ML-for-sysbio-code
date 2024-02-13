@@ -55,7 +55,9 @@ rename!(df_entrez, :query => :ENTREZID);
 leftjoin!(entrez_id, df_entrez, on=:ENTREZID);
 tf = ismissing.(entrez_id.symbol);
 entrez_id.symbol[tf] .= entrez_id.ENTREZID[tf];
+entrez_id.symbol = string.(entrez_id.symbol);
 
+rename!(df, ["Cell line"; entrez_id.symbol]);
 
 """
 DRUG SENSITIVITY DATA
