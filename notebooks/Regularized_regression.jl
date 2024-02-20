@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.38
 
 using Markdown
 using InteractiveUtils
@@ -198,7 +198,7 @@ Since hyperparameter tuning is computationally expensive, we will not do it usin
 "
 
 # ╔═╡ ad423168-c8dd-4e8b-b38d-835e6b2f6411
-@bind threshold Slider(0:0.05:1, default=0.25)
+@bind threshold Slider(0.1:0.05:1, default=0.25)
 
 # ╔═╡ 122b36be-3759-4980-818e-b87fd05d7e95
 selected_features = findall(map(x -> abs(cor(x,y[train])) > threshold, eachcol(X[train,:])));
@@ -260,12 +260,66 @@ Here's another cool feature of MLJ, for a diagnostic plot of the `rms` values at
 "
 
 # ╔═╡ 59865b1d-ef8f-4a07-a011-3662f2fd2ea8
+# ╠═╡ show_logs = false
 plot(mach_tuning)
+
+# ╔═╡ 33b12069-8423-4862-aa33-6d3817c836ca
+md"""
+To tune more than one hyperparameter, in this case both regularization strengths ``\lambda`` and ``\gamma``, first define a range for the second hyperparameter:
+"""
+
+# ╔═╡ d0959d43-bfcd-44a4-9c12-eccd6f3f351c
+lambda_range = range(std_elnet_model, :(elastic_net_regressor.lambda), lower=0.001, upper=1.0, scale=:log);
+
+# ╔═╡ bd356a7e-1c98-4a39-b7d3-22f3f49ef8d9
+md"""
+We now define another tuning model that performs a Grid search over the combined hyperparameter ranges, and create a machine and fit it as before:
+"""
+
+# ╔═╡ 75906b07-22b4-445f-9c91-ac41146baae8
+self_tuning_std_elnet_model_2 = TunedModel(
+    model=std_elnet_model,
+    resampling=Holdout(shuffle=true),
+    tuning=Grid(resolution=20, shuffle=false),
+    range=[lambda_range, gamma_range],
+	acceleration=CPUThreads(),
+    measure=rms
+)
+
+# ╔═╡ f24aadbd-f33b-4d52-a86c-381e50b2045f
+mach_tuning_2 = machine(self_tuning_std_elnet_model_2, X_sub, y);
+
+# ╔═╡ aab73e6d-6ea5-429f-8248-09d51d69ba2a
+# ╠═╡ show_logs = false
+fit!(mach_tuning_2, rows=train);
+
+# ╔═╡ 02aebe3c-8af9-482c-ba3e-33703b518139
+md"""
+The tuning results can again be visualized using the `plot` command. What do the color and size of the markers in the bottom left panel mean?
+"""
+
+# ╔═╡ 476dde61-56cb-48a2-a80f-b12d50a30f7b
+# ╠═╡ show_logs = false
+plot(mach_tuning_2)
+
+# ╔═╡ e2234adf-2532-4ebe-af62-e82cde4d134e
+lambda_best = report(mach_tuning_2).best_history_entry.model.elastic_net_regressor.lambda
+
+# ╔═╡ 6b9d71a4-0faa-4ed2-9adc-06f00bdf934d
+gamma_best = report(mach_tuning_2).best_history_entry.model.elastic_net_regressor.lambda
+
+# ╔═╡ 340a55a6-3cab-4d34-8cef-1cd7c4617b78
+fitted_params(mach_tuning_2).best_fitted_params.elastic_net_regressor.coefs
 
 # ╔═╡ f19aab7c-79f8-46e4-a65c-74d625cfbace
 md"
 To predict drug sensitivities on the test samples using the best model found during hyperparameter tuning, call `predict` as before: 
 "
+
+# ╔═╡ 3b018ad8-a169-4b33-a853-f6dd65463032
+md"""
+Note our Elastic Net model has only two hyperparameters, such that exhaustive tuning over all hyperparameter value combinations in a pairwise grid is feasible. When tuning a large number of hyperparameters, more sophisticated sampling strategies have to be used, see for instance tuning using  [random search](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/#Tuning-using-a-random-search) or [latin hypercube sampling](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/#Tuning-using-Latin-hypercube-sampling).
+"""
 
 # ╔═╡ b62249e0-2b70-4721-96e9-fb66205f20da
 md"
@@ -303,6 +357,11 @@ md"Compare predicted and true values:"
 
 # ╔═╡ 6427f4e8-e232-43ae-84a2-6c789468da67
 md"Compare values predicted by the best Elastic Net model and random forest model:"
+
+# ╔═╡ 90a8f2d3-194e-4367-af0d-8e73edcd74bb
+md"""
+### TODO: CCLE paper feature selection and heatmap figures
+"""
 
 # ╔═╡ 6df55699-2008-424a-9d92-8aa4f25d3a2c
 md"
@@ -366,7 +425,7 @@ yhat = MLJ.predict(mach,rows=test);
 scatter(y[test],yhat)
 
 # ╔═╡ 635cb960-6031-41df-8b10-e7e6429abd50
-yhat_best = predict(mach_tuning, rows=test);
+yhat_best = predict(mach_tuning_2, rows=test);
 
 # ╔═╡ f6281ade-48c9-4d29-8fd1-217ac6081c1c
 scatter(y[test],yhat_best)
@@ -382,7 +441,7 @@ scatter(yhat_best,yhat_rf)
 
 # ╔═╡ 87dfa45a-ae47-4a1e-a454-818073a25ad9
 md"""
-We can also see why Random Forest is popular. Out-of-the box it achieves a lower RMS error than the tuned Elastic Net model:  $(rms(y[test],yhat_rf)) vs. $( rms(y[test],yhat_best)).
+We can also see why Random Forest is popular. Out-of-the box it achieves comparable RMS error than the tuned Elastic Net model:  $(rms(y[test],yhat_rf)) vs. $( rms(y[test],yhat_best)).
 """
 
 # ╔═╡ 11acff61-f6fb-4f75-a85a-149aff1f7f8e
@@ -512,9 +571,21 @@ end
 # ╠═9bc4ae61-0caf-4ca4-8302-64ef96ade4c0
 # ╟─e9572f8d-79be-4e5a-b24f-9749ab569fb4
 # ╠═59865b1d-ef8f-4a07-a011-3662f2fd2ea8
+# ╟─33b12069-8423-4862-aa33-6d3817c836ca
+# ╠═d0959d43-bfcd-44a4-9c12-eccd6f3f351c
+# ╟─bd356a7e-1c98-4a39-b7d3-22f3f49ef8d9
+# ╠═75906b07-22b4-445f-9c91-ac41146baae8
+# ╠═f24aadbd-f33b-4d52-a86c-381e50b2045f
+# ╠═aab73e6d-6ea5-429f-8248-09d51d69ba2a
+# ╟─02aebe3c-8af9-482c-ba3e-33703b518139
+# ╠═476dde61-56cb-48a2-a80f-b12d50a30f7b
+# ╠═e2234adf-2532-4ebe-af62-e82cde4d134e
+# ╠═6b9d71a4-0faa-4ed2-9adc-06f00bdf934d
+# ╠═340a55a6-3cab-4d34-8cef-1cd7c4617b78
 # ╟─f19aab7c-79f8-46e4-a65c-74d625cfbace
 # ╠═635cb960-6031-41df-8b10-e7e6429abd50
 # ╠═f6281ade-48c9-4d29-8fd1-217ac6081c1c
+# ╟─3b018ad8-a169-4b33-a853-f6dd65463032
 # ╟─b62249e0-2b70-4721-96e9-fb66205f20da
 # ╠═20d69d51-4182-470c-9b88-e0da43d1cc16
 # ╠═55253db7-4410-4fab-adb5-f82aa705d3d9
@@ -529,6 +600,7 @@ end
 # ╟─6427f4e8-e232-43ae-84a2-6c789468da67
 # ╠═f75d7d99-8abd-4a64-9432-62540bedb9aa
 # ╟─87dfa45a-ae47-4a1e-a454-818073a25ad9
+# ╟─90a8f2d3-194e-4367-af0d-8e73edcd74bb
 # ╟─6df55699-2008-424a-9d92-8aa4f25d3a2c
 # ╠═fc42330a-be6f-42d2-b1c5-a263c104d266
 # ╠═6b8673a3-d293-42c1-a9b3-84207eb5ba7e

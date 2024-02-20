@@ -57,7 +57,7 @@ tf = ismissing.(entrez_id.symbol);
 entrez_id.symbol[tf] .= entrez_id.ENTREZID[tf];
 entrez_id.symbol = string.(entrez_id.symbol);
 
-rename!(df, ["Cell line"; entrez_id.symbol]);
+rename!(df, ["Cell_line"; entrez_id.symbol]);
 
 """
 DRUG SENSITIVITY DATA

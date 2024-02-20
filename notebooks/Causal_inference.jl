@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.38
 
 using Markdown
 using InteractiveUtils
@@ -560,7 +560,7 @@ If you are convinced by the above arguments and have some molecular QTL data wai
 """
 
 # ╔═╡ Cell order:
-# ╟─cd2140c0-ca5a-11ee-2721-ef7db51463b0
+# ╠═cd2140c0-ca5a-11ee-2721-ef7db51463b0
 # ╠═947d626d-f39b-4100-8a3e-fcf087caa355
 # ╠═7d74bb79-12ad-4329-a0b0-7d0bfe0fd812
 # ╠═50ea2369-6afb-43a2-9bc4-64157bc6cf76

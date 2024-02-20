@@ -38,3 +38,22 @@ uuid="7bff3b5e-eae7-4ae7-b861-c02565ff294a"
     # Path with posix `/` separators.
     # Use @__DIR__ for paths relative to Data.toml
     path="@__DIR__/data/processed/CCLE"
+
+[[datasets]]
+# Some alphanumeric name (can include spaces and underscores)
+name="Mouse_V1_ALM"
+# Optional description
+description="Single-cell expression data of cells from the mouse primary visual cortex and anterior lateral motor cortex obtained from the [Allen Brain Map](https://portal.brain-map.org/atlases-and-data/rnaseq/mouse-v1-and-alm-smart-seq) with cell clustering annotation from [Tasic et al. (2018)](https://doi.org/10.1038/s41586-018-0654-5) (annotation file from the [Berens lab github](https://portal.brain-map.org/atlases-and-data/rnaseq/mouse-v1-and-alm-smart-seq))."
+
+# A unique ID. Generate with UUIDs.uuid4()
+uuid="10016b00-308e-48cf-a62b-4e18672d7ce6"
+
+    # Storage location
+    [datasets.storage]
+    # The name of the storage driver.
+    driver="FileSystem"
+    # Data stored in FileSystem is either Blob (a file) or BlobTree (a directory/folder)
+    type="BlobTree"
+    # Path with posix `/` separators.
+    # Use @__DIR__ for paths relative to Data.toml
+    path="@__DIR__/data/processed/Mouse_V1_ALM"
