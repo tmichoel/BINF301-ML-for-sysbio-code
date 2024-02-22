@@ -37,14 +37,7 @@ df = innerjoin(dfALM,dfVIS,on=:Column1);
 fclust = datadir("processed","Mouse_V1_ALM","tasic-sample_heatmap_plot_data.csv");
 dfClust = DataFrame(CSV.File(fclust));
 
-# Find and select cells that have a cluster label
-tf = .!isnothing.(indexin(names(df),dfClust.sample_name))
-tf[1] = true; # keep the gene IDs
-
-select!(df, findall(tf))
-#df.Column1 = string.(df.Column1)
-
-# Get gene annotation
+# Read gene annotation
 fannot_ALM = datadir("raw","Mouse_V1_ALM","mouse_ALM_gene_expression_matrices_2018-06-14", "mouse_ALM_2018-06-14_genes-rows.csv");
 dfannot_ALM = DataFrame(CSV.File(fannot_ALM));
 
@@ -53,16 +46,27 @@ dfannot_VIS = DataFrame(CSV.File(fannot_VIS));
 
 # Confirm that annotations are the same
 all(dfannot_ALM.gene_entrez_id .== dfannot_VIS.gene_entrez_id)
-all(string.(dfannot_ALM.gene_entrez_id) .== df.Column1)
+all(string.(dfannot_ALM.gene_entrez_id) .== string.(df.Column1))
 
-# Replace gene IDs with gene symbols in expression data
-df.Column1 = dfannot_ALM.gene_symbol
 
-# Rename Column1 to gene_symbol
-rename!(df, :Column1 => :gene_symbol)
+# Find and select cells that have a cluster label
+tf = .!isnothing.(indexin(names(df),dfClust.sample_name));
+select!(df, findall(tf));
+#df.Column1 = string.(df.Column1)
+
+# Select genes that have non-zero expression in at least nmin=10 cells; non-zero expression is defined as having a value greater than t=32. Values for nmin and t are from Kobak & Berens 2019,
+t = 32
+nmin = 10
+tfg = sum(eachcol(df .>= t)) .>= nmin;
+df = df[tfg,:];
+
+dfannot = dfannot_ALM[tfg,:];
 
 # Save data
 fexpr = datadir("processed","Mouse_V1_ALM","mouse_ALM_VISp_gene_expression.arrow");
-Arrow.write(fexpr,df)
+fannot = datadir("processed","Mouse_V1_ALM","mouse_ALM_VISp_gene_annotation.csv");
+
+Arrow.write(fexpr,df);
+CSV.write(fannot,dfannot);
 
 

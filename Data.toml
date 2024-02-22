@@ -43,7 +43,7 @@ uuid="7bff3b5e-eae7-4ae7-b861-c02565ff294a"
 # Some alphanumeric name (can include spaces and underscores)
 name="Mouse_V1_ALM"
 # Optional description
-description="Single-cell expression data of cells from the mouse primary visual cortex and anterior lateral motor cortex obtained from the [Allen Brain Map](https://portal.brain-map.org/atlases-and-data/rnaseq/mouse-v1-and-alm-smart-seq) with cell clustering annotation from [Tasic et al. (2018)](https://doi.org/10.1038/s41586-018-0654-5) (annotation file from the [Berens lab github](https://portal.brain-map.org/atlases-and-data/rnaseq/mouse-v1-and-alm-smart-seq))."
+description="Single-cell expression and gene annotation data of cells from the mouse primary visual cortex and anterior lateral motor cortex obtained from the Allen Brain Map (https://portal.brain-map.org/atlases-and-data/rnaseq/mouse-v1-and-alm-smart-seq) with cell clustering annotation from Tasic et al. (2018)(https://doi.org/10.1038/s41586-018-0654-5) (annotation file from the Berens lab github (https://portal.brain-map.org/atlases-and-data/rnaseq/mouse-v1-and-alm-smart-seq)). Genes with non-zero expression (>32 counts) in less than 10 cells have been discarded, following Kobak & Berens (2019) (https://doi.org/10.1038/s41467-019-13056-x)."
 
 # A unique ID. Generate with UUIDs.uuid4()
 uuid="10016b00-308e-48cf-a62b-4e18672d7ce6"
