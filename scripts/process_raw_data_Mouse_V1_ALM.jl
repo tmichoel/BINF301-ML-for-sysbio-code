@@ -4,6 +4,7 @@ using DrWatson
 using DataFrames
 using Arrow
 using CSV
+using SparseArrays
 
 """
 Download and unzip gene-level read count zip files from: https://portal.brain-map.org/atlases-and-data/rnaseq/mouse-v1-and-alm-smart-seq and store in the folder data/raw/Mouse_V1_ALM
@@ -35,7 +36,7 @@ df = innerjoin(dfALM,dfVIS,on=:Column1);
 
 # Read cluster label data
 fclust = datadir("processed","Mouse_V1_ALM","tasic-sample_heatmap_plot_data.csv");
-dfClust = DataFrame(CSV.File(fclust));
+df_cell_annot = DataFrame(CSV.File(fclust));
 
 # Read gene annotation
 fannot_ALM = datadir("raw","Mouse_V1_ALM","mouse_ALM_gene_expression_matrices_2018-06-14", "mouse_ALM_2018-06-14_genes-rows.csv");
@@ -50,7 +51,7 @@ all(string.(dfannot_ALM.gene_entrez_id) .== string.(df.Column1))
 
 
 # Find and select cells that have a cluster label
-tf = .!isnothing.(indexin(names(df),dfClust.sample_name));
+tf = .!isnothing.(indexin(names(df),df_cell_annot.sample_name));
 select!(df, findall(tf));
 #df.Column1 = string.(df.Column1)
 
@@ -60,13 +61,28 @@ nmin = 10
 tfg = sum(eachcol(df .>= t)) .>= nmin;
 df = df[tfg,:];
 
-dfannot = dfannot_ALM[tfg,:];
+df_gene_annot = dfannot_ALM[tfg,:];
 
-# Save data
+# Convert the expression data to a matrix and clear the dataframe
+counts = Matrix(df);
+df = nothing;
+
+# Set all counts less than t to zero
+counts[counts .< t] .= 0;
+
+# Convert the counts to a sparse matrix
+counts = sparse(counts);
+
+# Represent as row, column, value
+I, J, V = findnz(counts);
+
+# Store row, column, value in a dataframe and save in arrow format
 fexpr = datadir("processed","Mouse_V1_ALM","mouse_ALM_VISp_gene_expression.arrow");
-fannot = datadir("processed","Mouse_V1_ALM","mouse_ALM_VISp_gene_annotation.csv");
-
+df = DataFrame(I=I, J=J, V=V);
 Arrow.write(fexpr,df);
+
+# Save gene annotation as CSV
+fannot = datadir("processed","Mouse_V1_ALM","mouse_ALM_VISp_gene_annotation.csv");
 CSV.write(fannot,dfannot);
 
 
