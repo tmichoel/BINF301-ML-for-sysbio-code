@@ -77,12 +77,13 @@ Correct gene expression levels for covariates
 Use a dummy dataframe to call the regression function from the GLM package.
 """
 
-df = DataFrame("X1"=>categorical(df_cov.batch), "X2"=>df_cov.OD_covariate, "Z"=>df_expr[:,1])
+df_expr_adj = copy(df_expr)
+df = DataFrame("X1"=>categorical(df_cov.batch), "X2"=>df_cov.OD_covariate, "Z"=>df_expr_adj[:,1])
 
-for i=1:ncol(df_expr)
+for i=1:ncol(df_expr_adj)
     df.Z = df_expr[:,i]
     fit = lm(@formula(Z ~ X1 + X2),df)
-    df_expr[:,i] = residuals(fit)
+    df_expr_adj[:,i] = residuals(fit)
 end
 
 """
@@ -101,11 +102,23 @@ df_eqtl.rsq = df_eqtl.r.^2
 # Sort by gene alphabetically and rsq in descending order
 sort!(df_eqtl, [:gene, :rsq], rev=[false, true])
 
+# Keep only the strongest eQTL for each gene
+gdf_eqtl = groupby(df_eqtl, :gene)
+
+df_eqtl = combine(gdf_eqtl, [:pmarker, :r, :rsq] =>
+               ((p, r, s) -> (pmarker=p[argmax(s)], r=r[argmax(s)])) =>
+               AsTable)
+
+
+
 """
 Save data to processed directory
 """
 fexpr_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-expr.csv");
 CSV.write(fexpr_out, df_expr)
+
+fexpr_adj_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-expr_adj.csv");
+CSV.write(fexpr_adj_out, df_expr_adj)
 
 fgeno_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-geno.csv");
 CSV.write(fgeno_out, df_geno)
