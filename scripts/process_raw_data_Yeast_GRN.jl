@@ -19,6 +19,11 @@ Download and unzip data from [Albert et al (2018)](https://doi.org/10.7554/eLife
 - Heritability results: https://figshare.com/ndownloader/files/10139343?private_link=83bddc1ddf3f97108ad4
 
 Save the files in the `data/raw/Yeast_GRN` directory of the project.
+
+Download and unzip GRN data from Yeastract from:
+
+- https://github.com/michoel-lab/FindrCausalNetworkInferenceOnYeast/blob/main/data/input/yeastract/Expr_TF_act_OR_inh_RegulationMatrix_Documented_2020511.csv.gz
+- https://github.com/michoel-lab/FindrCausalNetworkInferenceOnYeast/blob/main/data/input/yeastract/onlyDNABinding_RegulationMatrix_Documented_2020511.csv.gz
 """
 
 """
@@ -125,3 +130,12 @@ CSV.write(fgeno_out, df_geno)
 
 feqtl_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-eQTL.csv");
 CSV.write(feqtl_out, df_eqtl)
+
+"""
+Process GRN data from Yeastract
+"""
+fGRN_binding = datadir("raw", "Yeast_GRN", "Yeastract","onlyDNABinding_RegulationMatrix_Documented_2020511.csv");
+fGRN_expression = datadir("raw", "Yeast_GRN", "Yeastract","Expr_TF_act_OR_inh_RegulationMatrix_Documented_2020511.csv");
+
+df_GRN_binding = DataFrame(CSV.File(fGRN_binding))
+df_GRN_expression = DataFrame(CSV.File(fGRN_expression))
