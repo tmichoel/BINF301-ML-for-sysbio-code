@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.38
 
 using Markdown
 using InteractiveUtils
@@ -216,18 +216,28 @@ In the function below, replace the line `logW=kvec` with the correct computation
 **Hint:** using the `map` function, the result can be computed in a single line. Type `map` in the Live Docs to learn more about this function. If you need help seeing how, the disable the next cell, make the one below visible, and enable it.
 "
 
+# ╔═╡ b0286f6a-3409-4dc0-83eb-cecb26d7fbcf
+function kmeans_totalcost(X, kvec)
+	logW = kvec # Replace this with the correct computation of the total cost value!
+	return logW
+end
+
+# ╔═╡ 8f5a8752-dd54-4a66-a83d-7c405e072626
+# ╠═╡ disabled = true
+#=╠═╡
+function kmeans_totalcost(X, kvec)
+	map(k -> log(kmeans(X,k).totalcost), kvec)
+end
+  ╠═╡ =#
+
 # ╔═╡ 436e5378-58bc-4bc6-b71d-a899ca56e95d
 kvec = 1:20
 
 # ╔═╡ 656597ae-6773-47ea-82c4-4543fa409b6e
-#=╠═╡
 logW = kmeans_totalcost(X_std[:,sd.>sdcut]', kvec)
-  ╠═╡ =#
 
 # ╔═╡ 7ecf818a-f356-4dba-82a6-e16fdae1bc06
-#=╠═╡
 plot(kvec, logW, xlabel=L"K", ylabel=L"\log W_K", marker=:circle,label=false)
-  ╠═╡ =#
 
 # ╔═╡ 86c2b9b2-ca4f-49ac-9b04-a7b9d7c2fec8
 md"
@@ -235,9 +245,7 @@ If the kink is hard to see (it usually is!), adding the successive differences i
 "
 
 # ╔═╡ 9e150cca-2bc0-4f38-a97f-116daa46ae97
-#=╠═╡
 plot!(twinx(), diff(logW), ylabel=L"\log W_{K+1} - \log W_K", linecolor=:red, marker=:square, markercolor=:red,label=false)
-  ╠═╡ =#
 
 # ╔═╡ 8a6fb2ac-d4cf-4d4d-b8c9-d3cbe1f19fd9
 md"
@@ -265,22 +273,6 @@ freqtable(km_opt.assignments,triple_neg);
 # ╠═╡ disabled = true
 #=╠═╡
 freqtable(km_opt.assignments,stage);
-  ╠═╡ =#
-
-# ╔═╡ 8f5a8752-dd54-4a66-a83d-7c405e072626
-# ╠═╡ disabled = true
-#=╠═╡
-function kmeans_totalcost(X, kvec)
-	map(k -> log(kmeans(X,k).totalcost), kvec)
-end
-  ╠═╡ =#
-
-# ╔═╡ b0286f6a-3409-4dc0-83eb-cecb26d7fbcf
-#=╠═╡
-function kmeans_totalcost(X, kvec)
-	logW = kvec # Replace this with the correct computation of the total cost value!
-	return logW
-end
   ╠═╡ =#
 
 # ╔═╡ Cell order:

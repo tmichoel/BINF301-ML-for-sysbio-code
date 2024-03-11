@@ -114,8 +114,35 @@ df_eqtl = combine(gdf_eqtl, [:pmarker, :r, :rsq] =>
                ((p, r, s) -> (pmarker=p[argmax(s)], r=r[argmax(s)])) =>
                AsTable)
 
+"""
+Read Ensmbl annotation file
+"""
+fens =  datadir("raw", "Yeast_GRN", "Ensembl", "cleaned_genes_ensembl111_yeast_step2.txt");
+df_ens = DataFrame(CSV.File(fens, header=false, delim='\t'))
+
+# Split column 9 in separate columns, first splitting on space
+id_name_array = [split(x) for x in df_ens[:,9]]
+id_array = string.([split(id_name_array[k][1], ":")[2] for k in eachindex(id_name_array)])
+name_array = string.([split(id_name_array[k][2], "=")[2] for k in eachindex(id_name_array)])
+
+# Create dict from arrays
+id2name = Dict(zip(id_array, name_array))
+
+expr_new_names =  [x in keys(id2name) ? id2name[x] : x for x in names(df_expr)];
+rename!(df_expr, expr_new_names)
+
+"""
+Process GRN data from Yeastract
+"""
+fGRN_binding = datadir("raw", "Yeast_GRN", "Yeastract","onlyDNABinding_RegulationMatrix_Documented_2020511.csv");
+fGRN_expression = datadir("raw", "Yeast_GRN", "Yeastract","Expr_TF_act_OR_inh_RegulationMatrix_Documented_2020511.csv");
+
+df_GRN_binding = DataFrame(CSV.File(fGRN_binding))
+df_GRN_expression = DataFrame(CSV.File(fGRN_expression))
 
 
+
+               
 """
 Save data to processed directory
 """
@@ -130,12 +157,3 @@ CSV.write(fgeno_out, df_geno)
 
 feqtl_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-eQTL.csv");
 CSV.write(feqtl_out, df_eqtl)
-
-"""
-Process GRN data from Yeastract
-"""
-fGRN_binding = datadir("raw", "Yeast_GRN", "Yeastract","onlyDNABinding_RegulationMatrix_Documented_2020511.csv");
-fGRN_expression = datadir("raw", "Yeast_GRN", "Yeastract","Expr_TF_act_OR_inh_RegulationMatrix_Documented_2020511.csv");
-
-df_GRN_binding = DataFrame(CSV.File(fGRN_binding))
-df_GRN_expression = DataFrame(CSV.File(fGRN_expression))
