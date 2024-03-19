@@ -37,7 +37,7 @@ begin
 end
 
 # ╔═╡ ad1f0212-c412-11ee-220f-391425de7e32
-md"# Predictive modelling of anticancer drug sensitivity in the Cancer Cell Line Encyclopedia
+md"# Predictive modelling of anticancer drug sensitivity in the Cancer Cell Line Encyclopedia using MLJ
 
 ## Setup the environment
 
@@ -84,22 +84,160 @@ Create a vector with response data:
 yname = "PD-0325901";
 
 # ╔═╡ 123b5c83-b43f-4e78-8583-0976056d2afa
-y = Array(df_sens.:"PD-0325901")
+y = Array(df_sens.:"PD-0325901");
 
 # ╔═╡ f8fa0306-e9b1-469d-89ba-ee114d8c4d72
 md"""
 ## Predictive modelling using MLJ
 
-If all you ever want to do is fit Lasso or Elastic Net linear regression models, using packages such as [GLMNet.jl](https://github.com/JuliaStats/GLMNet.jl) or [Lasso.jl](https://github.com/JuliaStats/Lasso.jl) is probably easiest. [GLMNet.jl](https://github.com/JuliaStats/GLMNet.jl) in particular wraps around the same Fortran code underlying GLMNet packages in other languages (such as the [glmnet](https://www.jstatsoft.org/article/view/v033i01) package for R) and has the same user interface.
-
-Here instead we will use the [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine learning framework to train predictive models of drug sensitivity. [MLJ](https://github.com/alan-turing-institute/MLJ.jl) comes with a steeper learning curve, but a big reward in the form of a long list of [supported models](https://alan-turing-institute.github.io/MLJ.jl/dev/model_browser/) that can be used instead of Elastic Net with hardly any changes to the code below.
+If all you ever want to do is fit Lasso or Elastic Net linear regression models, using packages such as [GLMNet.jl](https://github.com/JuliaStats/GLMNet.jl) or [Lasso.jl](https://github.com/JuliaStats/Lasso.jl) is probably easiest. Here instead we will use the [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine learning framework to train predictive models of drug sensitivity. [MLJ](https://github.com/alan-turing-institute/MLJ.jl) comes with a steeper learning curve, but a big reward in the form of a long list of [supported models](https://alan-turing-institute.github.io/MLJ.jl/dev/model_browser/) that can be used with hardly any changes to the code below. A comparable machine learning framework for [R](https://www.r-project.org/) is [MLR3](https://mlr3.mlr-org.com/), and for [Python](https://www.python.org/) [scikit-learn](https://scikit-learn.org/stable/).
 
 Read the [Getting Started](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/) for a quick overview of [MLJ](https://github.com/alan-turing-institute/MLJ.jl). If you're new(ish) to machine learning start with the [Learning MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/learning_mlj/) page.
+
+[Random forest regression](https://en.wikipedia.org/wiki/Random_forest) is a popular non-linear model, so let's see how it does on our data. To read more, remove the semi-colon at the end of the `doc` statement.
 """
+
+# ╔═╡ 20d69d51-4182-470c-9b88-e0da43d1cc16
+# ╠═╡ show_logs = false
+RandomForestRegressor = @load RandomForestRegressor pkg="DecisionTree";
+
+# ╔═╡ 55253db7-4410-4fab-adb5-f82aa705d3d9
+doc("RandomForestRegressor",pkg="DecisionTree");
+
+# ╔═╡ bb437a19-be1d-4145-8dc1-be53584b69fb
+md"
+### Setting up the model
+
+A key aspect of [MLJ](https://github.com/alan-turing-institute/MLJ.jl) is the separation between *model* and *data*. For regression problems $y=f(x_1,\dots,x_p)$, the *model* describes the family of functions $f$ being considered. Defining a model in [MLJ](https://github.com/alan-turing-institute/MLJ.jl) can be as simple as:
+"
+
+# ╔═╡ 387cd0e4-6887-4ebf-ab8f-59607e01d15f
+rf_model = RandomForestRegressor();
+
+# ╔═╡ 0f0dae8f-150d-4382-8b73-34cb42b5e705
+md"
+### Fitting the model
+
+We will fit a random forest with default hyperparameters. Because a random forest is a set of [decision trees](https://en.wikipedia.org/wiki/Decision_tree_learning), and the nodes in a decision tree test whether a certain feature is above or below a learned threshold value, standardization of the features will make no difference and is not needed in this case.
+
+In [MLJ](https://github.com/alan-turing-institute/MLJ.jl), a model is coupled to the data in a *machine*:
+"
+
+# ╔═╡ 26192120-5742-4416-b568-7b6bbd37c0c9
+mach_rf = machine(rf_model, X, y);
+
+# ╔═╡ 4db0ffa4-1ffd-4c01-ae4b-b2617d2bccb3
+md"
+We typically fit a model to a subset of \"training\" samples and test its performance on the remaining \"test\" samples. Randomly partitioning the samples into 80% training and 20% test samples:
+"
+
+# ╔═╡ b76c66be-75b6-402b-9b3b-eca64b585cf1
+train, test = MLJBase.partition(eachindex(y), 0.8; shuffle=true, rng=123);
+
+# ╔═╡ 6964c19a-e101-4920-b630-a5009058e88e
+fit!(mach_rf, rows=train);
+
+# ╔═╡ f60d6ee9-b4ee-4b92-b5bc-a2958972e860
+yhat_rf = MLJBase.predict(mach_rf, rows=test);
+
+# ╔═╡ 7e55d699-8cbe-4bd4-8bb0-eb45c1e21e70
+md"Compare predicted and true values:"
+
+# ╔═╡ 182890e8-1fd1-4f29-92cb-c1f1d2b9480b
+begin
+	scatter(y[test],yhat_rf, label="", xlabel="Real $(yname) values", ylabel="Predicted $(yname) values")
+	title!(@sprintf("RMSE = %1.2f", rms(y[test],yhat_rf)))
+end
+
+# ╔═╡ e66465f8-857b-4942-a28c-f152a82d7a31
+md"
+We can check the feature importances of the fitted model:
+"
+
+# ╔═╡ bd2df233-3789-4f3d-afba-87a2da63403c
+df_fimp = stack(DataFrame(feature_importances(mach_rf)))
+
+# ╔═╡ 7d6c3437-361a-4d3e-87ef-b04029417950
+md"
+### Tuning a model
+
+So far, we have fitted a Random Forest regression model using default hyperparameter values. Random Forests are popular because these defaults in general give good prediction performance - compare the RMSE in the figure above to that of the tuned Elastic Net model in the `Regularized_regression_Glmnet.jl` notebook.
+
+In general though, prediction should be based on a model where these hyperparameters are tuned for a specific dataset. We can follow the example in [Tuning models](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/) in the MLJ documentation and tune the hyperparameter `min_purity_increase`, which determines how much a new decision tree split must improve the total score to be accepted.
+
+First we define a range of values for the hyperparameter to be considered for tuning:
+"
+
+# ╔═╡ 22ffcf4f-20f2-4011-ab51-e151d37aa7f1
+r = range(rf_model, :min_purity_increase, lower=0.001, upper=1.0, scale=:log);
+
+# ╔═╡ 4e2f3a4a-e1ac-4f8d-bb01-ed2242ecaf0e
+md"Then we have to define a `TunedModel` that will be used for the tuning. We need to specify the base model (Random Forest), how we will do the tuning (cross validation), how many values to test from our range object, and which measure we want to optimize:"
+
+# ╔═╡ b339e2e3-a2f4-40a4-b264-750dd6ad18b8
+self_tuning_rf_model = TunedModel(
+    model=rf_model,
+    resampling=CV(nfolds=3),
+    tuning=Grid(resolution=10),
+    range=r,
+    measure=rms
+);
+
+# ╔═╡ e33459ea-1a81-4ca1-bbc1-a957e213b9ab
+mach_tune_rf = machine(self_tuning_rf_model, X, y);
+
+# ╔═╡ e34bf000-4f73-4508-b69a-318b88b66808
+# ╠═╡ disabled = true
+#=╠═╡
+fit!(mach_tune_rf, rows=train)
+  ╠═╡ =#
+
+# ╔═╡ 9a6d7294-3e5a-451e-8464-3292c237a207
+# ╠═╡ disabled = true
+#=╠═╡
+fitted_params(mach_tune_rf).best_model
+  ╠═╡ =#
+
+# ╔═╡ 8cc071d9-82fd-48f1-b84e-c1feceec607d
+# ╠═╡ disabled = true
+#=╠═╡
+plot(mach_tune_rf)
+  ╠═╡ =#
+
+# ╔═╡ 8fb5a5a6-02c0-4c91-a959-c21c1da7d69b
+# ╠═╡ disabled = true
+#=╠═╡
+yhat_tune_rf = MLJBase.predict(mach_tune_rf, rows=test);
+  ╠═╡ =#
+
+# ╔═╡ 7f833a57-7375-4373-abca-920de45ba85c
+# ╠═╡ disabled = true
+#=╠═╡
+begin
+	scatter(y[test],yhat_tune_rf, label="", xlabel="Real $(yname) values", ylabel="Predicted $(yname) values")
+	title!(@sprintf("RMSE = %1.2f", rms(y[test],yhat_tune_rf)))
+end
+  ╠═╡ =#
+
+# ╔═╡ 64caaf6d-92be-4b1f-938f-7d63d67acf33
+md"
+Since hyperparameter tuning is computationally expensive, we will not do it using the full set of $(size(X,2)) features (genes), but start with a feature selection step. In the [CCLE paper](https://doi.org/10.1038/nature11003), a prescreening was applied where only features were included that were correlated with the response vector with ``R > 0.1`` based on Pearson correlation. It is not clear from their text whether the prescreening was done on the whole data or not, but clearly, to prevent data leakage it must be done on the training data only. Move the slider to select a threshold on the absolute correlation between a gene and the drug sensitivity (keep the default of 0.25 if you want computations to be fast):
+"
+
+# ╔═╡ 159c60a3-7651-43a7-8e5f-6385752d809c
+md"""
+!!! note \"Note\"
+	In the sections above, I emphasized the importance of separating models from data in MLJ. Shouldn't this prescreening step be part of the model instead of doing this manually and having to remember to select features using training data only? And even better, shouldn't the correlation threshold be a tunable/learnable parameter of the model itself?
+
+	It turns out to be non-trivial to include a prescreening step that depends on both the features ``X`` and the target variable ``y``, requiring the use of so-called [Learning Networks](https://alan-turing-institute.github.io/MLJ.jl/dev/learning_networks/) instead of the simple [Linear Pipelines](https://alan-turing-institute.github.io/MLJ.jl/dev/linear_pipelines/) we used before. If you're interested (and you should be!), see the **Advanced topic** section below.
+"""
+
+# ╔═╡ 21e3547e-2a77-4534-92df-f25f199d1f19
+
 
 # ╔═╡ 3279787c-4e25-4817-bae3-a6b065a8b07b
 md"
-We will use the elastic net regression implementation of the [MLJLinearModels.jl](https://github.com/JuliaAI/MLJLinearModels.jl) package. To read more about this regressor, remove the semi-colon at the end of the following `doc` command. The most important point is the definition of the loss function. The `ElasticNetRegressor` (with default option `scale_penalty_with_samples=true`) finds the coefficients $\beta_j$ which minimize
+We will first use the elastic net regression implementation of the [MLJLinearModels.jl](https://github.com/JuliaAI/MLJLinearModels.jl) package. To read more about this regressor, remove the semi-colon at the end of the following `doc` command. The most important point is the definition of the loss function. The `ElasticNetRegressor` (with default option `scale_penalty_with_samples=true`) finds the coefficients $\beta_j$ which minimize
 
 $\frac12\sum_{i=1}^n \Bigl(y_i - \beta_0 - \sum_{j=1}^p X_{ij}\beta_j\Bigr)^2 + \frac{n\lambda}2 \|\beta\|_2^2 + n \gamma \|\beta\|_1$
 
@@ -130,6 +268,23 @@ or the other way around:
 Also note the `ElasticNetRegressor` default values of $\lambda=1.0$ and $\gamma=0.0$, i.e. by default the `ElasticNetRegressor` loss function penalty does not include the $L_1$ term.
 "
 
+# ╔═╡ ead508fc-3543-436c-becf-d6ebce50e37c
+md"
+Let's take the values for ``\alpha`` and ``\lambda'`` that we found in the notebook `Regularized_regression_Glmnet.jl` and compute the corresponding ``\lambda`` and ``\gamma``:
+"
+
+# ╔═╡ d67fb589-89e1-462f-841b-d2e94b72995a
+α = 0.5
+
+# ╔═╡ 301443c9-1465-4ad9-8b2d-17f5dcb0ebc9
+λ_glmnet = 0.06
+
+# ╔═╡ 477c4efc-bcfc-4a54-b143-71f8c17c637b
+λ = λ_glmnet * (1-α)
+
+# ╔═╡ 88514a70-c9c5-41f3-b474-9f41b92e9bc3
+γ = λ_glmnet * α
+
 # ╔═╡ e54510f4-0377-40b5-a30b-1893d98cd3e7
 # ╠═╡ show_logs = false
 ElasticNetRegressor = @load ElasticNetRegressor pkg="MLJLinearModels";
@@ -137,18 +292,8 @@ ElasticNetRegressor = @load ElasticNetRegressor pkg="MLJLinearModels";
 # ╔═╡ 2bef1d79-014e-42ec-b1b5-fe9ecf344a95
 doc("ElasticNetRegressor",pkg="MLJLinearModels");
 
-# ╔═╡ bb437a19-be1d-4145-8dc1-be53584b69fb
-md"
-### Setting up the model
-
-A key aspect of [MLJ](https://github.com/alan-turing-institute/MLJ.jl) is the separation between *model* and *data*. For regression problems $y=f(x_1,\dots,x_p)$, the *model* describes the family of functions $f$ being considered. Defining a model in [MLJ](https://github.com/alan-turing-institute/MLJ.jl) can be as simple as:
-"
-
 # ╔═╡ 707e0034-f707-4169-ac71-79489683153c
-elnet_model = ElasticNetRegressor(gamma=0.1)
-
-# ╔═╡ 6263cd9b-a6f7-42c7-ab85-9cf8bf10869a
-md"Note that the ``\lambda`` parameter is kept at its default value of 1.0 if we don't specify a value in the model arguments."
+elnet_model = ElasticNetRegressor(lambda=λ, gamma=γ)
 
 # ╔═╡ d0c78460-9a6d-493c-abee-08f5e249f2eb
 md"
@@ -167,16 +312,22 @@ md"
 To fit a model, we first have to couple it to data. In [MLJ](https://github.com/alan-turing-institute/MLJ.jl), this is done by defining a *machine*:
 "
 
-# ╔═╡ e7c32cb9-e75a-4cc3-9c40-0496e88a65d5
-mach = machine(std_elnet_model, X, y);
+# ╔═╡ ad423168-c8dd-4e8b-b38d-835e6b2f6411
+@bind threshold PlutoUI.Slider(0.1:0.05:1, default=0.25)
 
-# ╔═╡ 4db0ffa4-1ffd-4c01-ae4b-b2617d2bccb3
+# ╔═╡ 122b36be-3759-4980-818e-b87fd05d7e95
+selected_features = findall(map(x -> abs(cor(x,y[train])) > threshold, eachcol(X[train,:])));
+
+# ╔═╡ ad902283-2f1c-4b03-9ee9-a46bfebe78a2
 md"
-We typically fit a model to a subset of \"training\" samples and test its performance on the remaining \"test\" samples. Randomly partitioning the samples into 80% training and 20% test samples:
+A threshold of $(threshold) results in $(length(selected_features)) selected features. Define a new DataFrame to hold the selected features:
 "
 
-# ╔═╡ b76c66be-75b6-402b-9b3b-eca64b585cf1
-train, test = MLJBase.partition(eachindex(y), 0.8; shuffle=true);
+# ╔═╡ 553be392-0ea3-4b50-8647-da1251e1c04f
+X_sub = X[:, selected_features];
+
+# ╔═╡ e7c32cb9-e75a-4cc3-9c40-0496e88a65d5
+mach = machine(std_elnet_model, X[:,selected_features], y);
 
 # ╔═╡ 134a0be4-7cc6-4086-a0f9-8d7cd8a6be7e
 md"
@@ -194,53 +345,17 @@ Finally we predict drug sensitivity values on the test samples and compare to th
 
 # ╔═╡ c6b77ed6-9f3a-4263-a8c7-c5170d0af702
 # ╠═╡ show_logs = false
-# ╠═╡ disabled = true
 #=╠═╡
 yhat = MLJ.predict(mach,rows=test);
   ╠═╡ =#
 
 # ╔═╡ fac008e6-8d28-404f-ab74-6bfdca8e458c
-# ╠═╡ disabled = true
 #=╠═╡
 begin
 	scatter(y[test],yhat, label="", xlabel="Real $(yname) values", ylabel="Predicted $(yname) values")
-	annotate!(5.,-.7,@sprintf("RMSE = %1.2f", rms(y[test],yhat)))
+	title!(@sprintf("RMSE = %1.2f", rms(y[test],yhat)))
 end
   ╠═╡ =#
-
-# ╔═╡ 7d6c3437-361a-4d3e-87ef-b04029417950
-md"
-### Tuning a model
-
-So far, we have fitted an Elastic Net regression model using arbitrary hyperparameter values. Of course, prediction should be based on a model where these hyperparameters are tuned for a specific dataset. See [Tuning models](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/) in the MLJ documentation.
-"
-
-# ╔═╡ 64caaf6d-92be-4b1f-938f-7d63d67acf33
-md"
-Since hyperparameter tuning is computationally expensive, we will not do it using the full set of $(size(X,2)) features (genes), but start with a feature selection step. In the [CCLE paper](https://doi.org/10.1038/nature11003), a prescreening was applied where only features were included that were correlated with the response vector with ``R > 0.1`` based on Pearson correlation. It is not clear from their text whether the prescreening was done on the whole data or not, but clearly, to prevent data leakage it must be done on the training data only. Move the slider to select a threshold on the absolute correlation between a gene and the drug sensitivity (keep the default of 0.25 if you want computations to be fast):
-"
-
-# ╔═╡ ad423168-c8dd-4e8b-b38d-835e6b2f6411
-@bind threshold PlutoUI.Slider(0.1:0.05:1, default=0.25)
-
-# ╔═╡ 122b36be-3759-4980-818e-b87fd05d7e95
-selected_features = findall(map(x -> abs(cor(x,y[train])) > threshold, eachcol(X[train,:])));
-
-# ╔═╡ ad902283-2f1c-4b03-9ee9-a46bfebe78a2
-md"
-A threshold of $(threshold) results in $(length(selected_features)) selected features. Define a new DataFrame to hold the selected features:
-"
-
-# ╔═╡ 553be392-0ea3-4b50-8647-da1251e1c04f
-X_sub = X[:, selected_features];
-
-# ╔═╡ 159c60a3-7651-43a7-8e5f-6385752d809c
-md"""
-!!! note \"Note\"
-	In the sections above, I emphasized the importance of separating models from data in MLJ. Shouldn't this prescreening step be part of the model instead of doing this manually and having to remember to select features using training data only? And even better, shouldn't the correlation threshold be a tunable/learnable parameter of the model itself?
-
-	It turns out to be non-trivial to include a prescreening step that depends on both the features ``X`` and the target variable ``y``, requiring the use of so-called [Learning Networks](https://alan-turing-institute.github.io/MLJ.jl/dev/learning_networks/) instead of the simple [Linear Pipelines](https://alan-turing-institute.github.io/MLJ.jl/dev/linear_pipelines/) we used before. If you're interested (and you should be!), see the **Advanced topic** section below.
-"""
 
 # ╔═╡ d75fa1b7-e5b2-4e24-a9d3-fd476457c570
 md"
@@ -248,7 +363,10 @@ Let's start by only tuning the hyperparameter ``\gamma`` (``L_1`` penalty streng
 "
 
 # ╔═╡ 23589a74-1049-482a-92a1-5dcdab01f700
+# ╠═╡ disabled = true
+#=╠═╡
 gamma_range = range(std_elnet_model, :(elastic_net_regressor.gamma), lower=0.001, upper=2.0, scale=:log)
+  ╠═╡ =#
 
 # ╔═╡ 8236c3c0-decf-4d77-bbae-e2820c487965
 md"
@@ -256,6 +374,8 @@ We can now define a tuning model to optimize the selected hyperparameter followi
 "
 
 # ╔═╡ 8d907be8-e2fc-4463-b641-33c8302e9d2b
+# ╠═╡ disabled = true
+#=╠═╡
 self_tuning_std_elnet_model = TunedModel(
     model=std_elnet_model,
     resampling=CV(nfolds=5),
@@ -264,6 +384,7 @@ self_tuning_std_elnet_model = TunedModel(
 	acceleration=CPUThreads(),
     measure=rms
 )
+  ╠═╡ =#
 
 # ╔═╡ d9e6c5c9-f91e-47fd-8f2b-e622214fd0a5
 md"
@@ -271,11 +392,17 @@ Now tuning proceeds in the same way as before: we couple the tuning model to our
 "
 
 # ╔═╡ 3a9f7d20-2d29-4bed-bbd1-ba51972c1649
+# ╠═╡ disabled = true
+#=╠═╡
 mach_tuning = machine(self_tuning_std_elnet_model, X_sub, y);
+  ╠═╡ =#
 
 # ╔═╡ 9bc4ae61-0caf-4ca4-8302-64ef96ade4c0
 # ╠═╡ show_logs = false
+# ╠═╡ disabled = true
+#=╠═╡
 fit!(mach_tuning, rows=train);
+  ╠═╡ =#
 
 # ╔═╡ e9572f8d-79be-4e5a-b24f-9749ab569fb4
 md"
@@ -284,10 +411,16 @@ Here's another cool feature of MLJ, for a diagnostic plot of the `rms` values at
 
 # ╔═╡ 59865b1d-ef8f-4a07-a011-3662f2fd2ea8
 # ╠═╡ show_logs = false
+# ╠═╡ disabled = true
+#=╠═╡
 plot(mach_tuning)
+  ╠═╡ =#
 
 # ╔═╡ 6b9d71a4-0faa-4ed2-9adc-06f00bdf934d
+# ╠═╡ disabled = true
+#=╠═╡
 gamma_best = report(mach_tuning).best_history_entry.model.elastic_net_regressor.gamma
+  ╠═╡ =#
 
 # ╔═╡ f19aab7c-79f8-46e4-a65c-74d625cfbace
 md"
@@ -295,13 +428,19 @@ To predict drug sensitivities on the test samples using the best model found dur
 "
 
 # ╔═╡ 635cb960-6031-41df-8b10-e7e6429abd50
+# ╠═╡ disabled = true
+#=╠═╡
 yhat_best = MLJBase.predict(mach_tuning, rows=test);
+  ╠═╡ =#
 
 # ╔═╡ 5d24acff-7011-4ffb-ab78-94be5bda7e67
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	scatter(y[test],yhat_best, label="", xlabel="Real $(yname) values", ylabel="Predicted $(yname) values")
 	annotate!(6.,1.5,@sprintf("RMSE = %1.2f", rms(y[test],yhat_best)))
 end
+  ╠═╡ =#
 
 # ╔═╡ 3b018ad8-a169-4b33-a853-f6dd65463032
 md"""
@@ -316,10 +455,16 @@ To identify important features in an elastic net model, we can inspect the regre
 """
 
 # ╔═╡ 13151984-7281-4693-8ff8-cf5710ba9422
+# ╠═╡ disabled = true
+#=╠═╡
 elnet_model_opt = ElasticNetRegressor(gamma=gamma_best)
+  ╠═╡ =#
 
 # ╔═╡ 37939bdf-0dfc-45e3-9132-0c422c42d78d
+# ╠═╡ disabled = true
+#=╠═╡
 std_elnet_model_opt = Standardizer() |> elnet_model_opt;
+  ╠═╡ =#
 
 # ╔═╡ 45f57224-1b20-4bba-aef2-3e0b54223379
 md"
@@ -327,20 +472,32 @@ Fit the model to the full data:
 "
 
 # ╔═╡ 3158d185-36c9-4373-957b-8ef15eedcc94
+# ╠═╡ disabled = true
+#=╠═╡
 mach_opt = machine(std_elnet_model_opt, X, y);
+  ╠═╡ =#
 
 # ╔═╡ 37c17aaf-3742-4dae-91b3-25af8fcee927
 # ╠═╡ show_logs = false
+# ╠═╡ disabled = true
+#=╠═╡
 fit!(mach_opt)
+  ╠═╡ =#
 
 # ╔═╡ 68683a4e-3b20-4cff-bfed-73650855b877
 md"The coefficients are stored in the machine as a list of pairs:"
 
 # ╔═╡ 7d702290-0c97-4495-980b-d7bb5368123c
+# ╠═╡ disabled = true
+#=╠═╡
 fitted_params(mach_opt)
+  ╠═╡ =#
 
 # ╔═╡ 340a55a6-3cab-4d34-8cef-1cd7c4617b78
+# ╠═╡ disabled = true
+#=╠═╡
 coefs = fitted_params(mach_opt).elastic_net_regressor.coefs
+  ╠═╡ =#
 
 # ╔═╡ 46e83648-1d8c-4e70-899f-82f6506bdddd
 md"Let's put this in a DataFrame instead, also computing the absolute value as a measure of feature importance:"
@@ -508,62 +665,12 @@ begin
 end
   ╠═╡ =#
 
-# ╔═╡ b62249e0-2b70-4721-96e9-fb66205f20da
-md"
-### Trying other models
-
-As mentioned before, the power of using a framework like [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) is the availability of a large number of [models](https://alan-turing-institute.github.io/MLJ.jl/dev/model_browser/) that can be fitted using a uniform syntax. [Random forest regression](https://en.wikipedia.org/wiki/Random_forest) is a popular non-linear model, so let's see how it does on our data. To read more, remove the semi-colon at the end of the `doc` statement.
-"
-
-# ╔═╡ 20d69d51-4182-470c-9b88-e0da43d1cc16
-# ╠═╡ show_logs = false
-RandomForestRegressor = @load RandomForestRegressor pkg="BetaML";
-
-# ╔═╡ 55253db7-4410-4fab-adb5-f82aa705d3d9
-doc("RandomForestRegressor",pkg="BetaML");
-
-# ╔═╡ 0f0dae8f-150d-4382-8b73-34cb42b5e705
-md"
-We will fit a random forest with default hyperparameters. Because a random forest is a set of [decision trees](https://en.wikipedia.org/wiki/Decision_tree_learning), and the nodes in a decision tree test whether a certain feature is above or below a learned threshold value, standardization of the features will make no difference and is not needed in this case. 
-"
-
-# ╔═╡ 387cd0e4-6887-4ebf-ab8f-59607e01d15f
-rf_model = RandomForestRegressor()
-
-# ╔═╡ f0427f12-57fb-4632-96be-304b858545fd
-md"Now couple the model to the data in a machine and fit the model on the training samples. To save computing time, let's use the smaller dataset with preselected features."
-
-# ╔═╡ 86fc4031-b342-48da-9e92-263b69cb03b8
-mach_rf = machine(rf_model, X_sub, y);
-
-# ╔═╡ 8ec5eaee-5f39-4633-a6cf-777aba872b26
-fit!(mach_rf, rows=train);
-
-# ╔═╡ 55575356-834c-4850-b84f-353d34ddde19
-mach_rf.model
-
-# ╔═╡ 7e1f10bd-8b39-49e0-be75-e0108cc70c7a
-yhat_rf = MLJBase.predict(mach_rf, rows=test);
-
-# ╔═╡ 7e55d699-8cbe-4bd4-8bb0-eb45c1e21e70
-md"Compare predicted and true values:"
-
-# ╔═╡ 85fe6d7f-d2b1-4606-958f-cba8fcdd385f
-begin
-	scatter(y[test],yhat_rf, label="", xlabel="Real $(yname) values", ylabel="Predicted $(yname) values")
-	annotate!(4.,1.,@sprintf("RMSE = %1.2f", rms(y[test],yhat_rf)))
-end
-
-# ╔═╡ 6427f4e8-e232-43ae-84a2-6c789468da67
-md"Compare values predicted by the best Elastic Net model and random forest model:"
-
-# ╔═╡ f75d7d99-8abd-4a64-9432-62540bedb9aa
-scatter(yhat_best,yhat_rf, label="", xlabel="Predicted $(yname) values (Elastic Net)", ylabel="Predicted $(yname) values (Random Forest)")
-
 # ╔═╡ 87dfa45a-ae47-4a1e-a454-818073a25ad9
+#=╠═╡
 md"""
 We can also see why Random Forest is popular. Out-of-the box it achieves comparable RMS error than the tuned Elastic Net model:  $(rms(y[test],yhat_rf)) vs. $( rms(y[test],yhat_best)).
 """
+  ╠═╡ =#
 
 # ╔═╡ c03647eb-d2e9-40f6-b627-a690284421e3
 md"
@@ -572,7 +679,10 @@ To tune more than one hyperparameter, in the case of Elastic Net regression, tun
 "
 
 # ╔═╡ d0959d43-bfcd-44a4-9c12-eccd6f3f351c
+# ╠═╡ disabled = true
+#=╠═╡
 lambda_range = range(std_elnet_model, :(elastic_net_regressor.lambda), lower=0.001, upper=2.0, scale=:log);
+  ╠═╡ =#
 
 # ╔═╡ bd356a7e-1c98-4a39-b7d3-22f3f49ef8d9
 md"""
@@ -580,6 +690,8 @@ We now define another tuning model that performs a Grid search over the combined
 """
 
 # ╔═╡ 75906b07-22b4-445f-9c91-ac41146baae8
+# ╠═╡ disabled = true
+#=╠═╡
 self_tuning_std_elnet_model_2 = TunedModel(
     model=std_elnet_model,
     resampling=CV(nfolds=5),
@@ -588,12 +700,16 @@ self_tuning_std_elnet_model_2 = TunedModel(
 	acceleration=CPUThreads(),
     measure=rms
 )
+  ╠═╡ =#
 
 # ╔═╡ 05d34211-6a55-453d-b401-e2eb00bae662
 md"A machine is created as before:"
 
 # ╔═╡ f24aadbd-f33b-4d52-a86c-381e50b2045f
+# ╠═╡ disabled = true
+#=╠═╡
 mach_tuning_2 = machine(self_tuning_std_elnet_model_2, X_sub, y);
+  ╠═╡ =#
 
 # ╔═╡ a0e72ad6-06dc-43df-84f2-43f9bd40be82
 md"Fitting this machine will take more time (**Why?**). You can try it by enabling the following cell:"
@@ -631,6 +747,8 @@ See the [Learning networks (1)](https://juliaai.github.io/DataScienceTutorials.j
 "
 
 # ╔═╡ fc42330a-be6f-42d2-b1c5-a263c104d266
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	MLJModelInterface.@mlj_model mutable struct FeatureSelectorStd <: Unsupervised
 	    threshold::Float64 = 1.0::(_ > 0)
@@ -650,8 +768,11 @@ begin
 	    return selectcols(X,fitresult)
 	end
 end
+  ╠═╡ =#
 
 # ╔═╡ 6b8673a3-d293-42c1-a9b3-84207eb5ba7e
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	MLJModelInterface.@mlj_model mutable struct FeatureSelectorCor <: Unsupervised
 	    threshold::Float64 = 0.1::(_ > 0)
@@ -677,50 +798,90 @@ begin
 	    return selectcols(X,fitresult)
 	end
 end
+  ╠═╡ =#
 
 # ╔═╡ 68b42a23-eeaa-4fa3-83c8-122bf0b62793
+# ╠═╡ disabled = true
+#=╠═╡
 fs = FeatureSelectorCor()
+  ╠═╡ =#
 
 # ╔═╡ c9f0cbc5-3723-499e-bcb6-5fd8f0db3eeb
+# ╠═╡ disabled = true
+#=╠═╡
 ms = machine(fs,X,y);
+  ╠═╡ =#
 
 # ╔═╡ ba3e5eb9-3137-4a0d-9f90-017068aab34b
 # ╠═╡ show_logs = false
+# ╠═╡ disabled = true
+#=╠═╡
 fit!(ms)
+  ╠═╡ =#
 
 # ╔═╡ f931bee8-e370-4cb4-ad0f-6a82b8c5c7eb
+# ╠═╡ disabled = true
+#=╠═╡
 size(MLJ.transform(ms,X))
+  ╠═╡ =#
 
 # ╔═╡ 11acff61-f6fb-4f75-a85a-149aff1f7f8e
+# ╠═╡ disabled = true
+#=╠═╡
 Xs = source(X);
+  ╠═╡ =#
 
 # ╔═╡ 28cb414b-da63-4c0a-998f-f98623b2e9c9
+# ╠═╡ disabled = true
+#=╠═╡
 ys = source(y);
+  ╠═╡ =#
 
 # ╔═╡ cef7b439-0307-4286-a3d5-b406f53fc1a5
+# ╠═╡ disabled = true
+#=╠═╡
 m1 = machine(FeatureSelectorCor(threshold=0.35),Xs, ys);
+  ╠═╡ =#
 
 # ╔═╡ fddd2e38-7b68-4ba7-930e-95faaf8ac51f
+# ╠═╡ disabled = true
+#=╠═╡
 x = MLJ.transform(m1,Xs);
+  ╠═╡ =#
 
 # ╔═╡ 8d4cec94-6a7f-4fad-a6f2-bb63e68e5dbd
+# ╠═╡ disabled = true
+#=╠═╡
 m2 = machine(std_elnet_model,x,ys);
+  ╠═╡ =#
 
 # ╔═╡ d448c154-d54a-48dd-acc7-da33994f29f7
+# ╠═╡ disabled = true
+#=╠═╡
 yhat_ln = MLJBase.predict(m2,x);
+  ╠═╡ =#
 
 # ╔═╡ 5885192b-7922-4785-bb84-e1220574c988
 # ╠═╡ show_logs = false
+# ╠═╡ disabled = true
+#=╠═╡
 fit!(yhat_ln,rows=train);
+  ╠═╡ =#
 
 # ╔═╡ e479f2b2-4e5d-41c3-90d0-518d0bf783b2
+# ╠═╡ disabled = true
+#=╠═╡
 yhat_ln(rows=train)
+  ╠═╡ =#
 
 # ╔═╡ 945b6a9d-03b0-4328-85c9-1b331c9f67fc
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	scatter(y[test],yhat_ln(rows=test), label="", xlabel="Real $(yname) values", ylabel="Predicted $(yname) values")
 	annotate!(4.5,0,@sprintf("RMSE = %1.2f", rms(y[test],yhat_ln(rows=test))))
 end
+  ╠═╡ =#
 
 # ╔═╡ 459c65de-a914-4d9c-992e-386afa5e5d2b
 # ╠═╡ disabled = true
@@ -761,31 +922,56 @@ end
 # ╟─f7799446-46f7-40b1-92f1-914818691bcc
 # ╠═f2dc3074-1d80-4ace-84ad-8b9199c2c769
 # ╠═123b5c83-b43f-4e78-8583-0976056d2afa
-# ╟─f8fa0306-e9b1-469d-89ba-ee114d8c4d72
-# ╟─3279787c-4e25-4817-bae3-a6b065a8b07b
-# ╠═e54510f4-0377-40b5-a30b-1893d98cd3e7
-# ╠═2bef1d79-014e-42ec-b1b5-fe9ecf344a95
+# ╠═f8fa0306-e9b1-469d-89ba-ee114d8c4d72
+# ╠═20d69d51-4182-470c-9b88-e0da43d1cc16
+# ╠═55253db7-4410-4fab-adb5-f82aa705d3d9
 # ╟─bb437a19-be1d-4145-8dc1-be53584b69fb
-# ╠═707e0034-f707-4169-ac71-79489683153c
-# ╟─6263cd9b-a6f7-42c7-ab85-9cf8bf10869a
-# ╟─d0c78460-9a6d-493c-abee-08f5e249f2eb
-# ╠═fd58d84e-e22d-4c06-8d5e-63bd7aeb188d
-# ╟─95379955-2fb1-452f-8ae1-37618c48397b
-# ╠═e7c32cb9-e75a-4cc3-9c40-0496e88a65d5
+# ╠═387cd0e4-6887-4ebf-ab8f-59607e01d15f
+# ╟─0f0dae8f-150d-4382-8b73-34cb42b5e705
+# ╠═26192120-5742-4416-b568-7b6bbd37c0c9
 # ╟─4db0ffa4-1ffd-4c01-ae4b-b2617d2bccb3
 # ╠═b76c66be-75b6-402b-9b3b-eca64b585cf1
+# ╠═6964c19a-e101-4920-b630-a5009058e88e
+# ╠═f60d6ee9-b4ee-4b92-b5bc-a2958972e860
+# ╟─7e55d699-8cbe-4bd4-8bb0-eb45c1e21e70
+# ╠═182890e8-1fd1-4f29-92cb-c1f1d2b9480b
+# ╟─e66465f8-857b-4942-a28c-f152a82d7a31
+# ╠═bd2df233-3789-4f3d-afba-87a2da63403c
+# ╟─7d6c3437-361a-4d3e-87ef-b04029417950
+# ╠═22ffcf4f-20f2-4011-ab51-e151d37aa7f1
+# ╟─4e2f3a4a-e1ac-4f8d-bb01-ed2242ecaf0e
+# ╠═b339e2e3-a2f4-40a4-b264-750dd6ad18b8
+# ╠═e33459ea-1a81-4ca1-bbc1-a957e213b9ab
+# ╠═e34bf000-4f73-4508-b69a-318b88b66808
+# ╠═9a6d7294-3e5a-451e-8464-3292c237a207
+# ╠═8cc071d9-82fd-48f1-b84e-c1feceec607d
+# ╠═8fb5a5a6-02c0-4c91-a959-c21c1da7d69b
+# ╠═7f833a57-7375-4373-abca-920de45ba85c
+# ╠═64caaf6d-92be-4b1f-938f-7d63d67acf33
+# ╠═ad902283-2f1c-4b03-9ee9-a46bfebe78a2
+# ╠═553be392-0ea3-4b50-8647-da1251e1c04f
+# ╟─159c60a3-7651-43a7-8e5f-6385752d809c
+# ╠═21e3547e-2a77-4534-92df-f25f199d1f19
+# ╟─3279787c-4e25-4817-bae3-a6b065a8b07b
+# ╠═ead508fc-3543-436c-becf-d6ebce50e37c
+# ╠═d67fb589-89e1-462f-841b-d2e94b72995a
+# ╠═301443c9-1465-4ad9-8b2d-17f5dcb0ebc9
+# ╠═477c4efc-bcfc-4a54-b143-71f8c17c637b
+# ╠═88514a70-c9c5-41f3-b474-9f41b92e9bc3
+# ╠═e54510f4-0377-40b5-a30b-1893d98cd3e7
+# ╠═2bef1d79-014e-42ec-b1b5-fe9ecf344a95
+# ╠═707e0034-f707-4169-ac71-79489683153c
+# ╠═d0c78460-9a6d-493c-abee-08f5e249f2eb
+# ╠═fd58d84e-e22d-4c06-8d5e-63bd7aeb188d
+# ╟─95379955-2fb1-452f-8ae1-37618c48397b
+# ╠═ad423168-c8dd-4e8b-b38d-835e6b2f6411
+# ╠═122b36be-3759-4980-818e-b87fd05d7e95
+# ╠═e7c32cb9-e75a-4cc3-9c40-0496e88a65d5
 # ╟─134a0be4-7cc6-4086-a0f9-8d7cd8a6be7e
 # ╠═2ad90c8d-a123-4fd9-bd83-755667750635
 # ╟─b22b72e0-71f9-4568-8d0d-a05af800a786
 # ╠═c6b77ed6-9f3a-4263-a8c7-c5170d0af702
 # ╠═fac008e6-8d28-404f-ab74-6bfdca8e458c
-# ╟─7d6c3437-361a-4d3e-87ef-b04029417950
-# ╠═64caaf6d-92be-4b1f-938f-7d63d67acf33
-# ╠═ad423168-c8dd-4e8b-b38d-835e6b2f6411
-# ╠═122b36be-3759-4980-818e-b87fd05d7e95
-# ╠═ad902283-2f1c-4b03-9ee9-a46bfebe78a2
-# ╠═553be392-0ea3-4b50-8647-da1251e1c04f
-# ╟─159c60a3-7651-43a7-8e5f-6385752d809c
 # ╟─d75fa1b7-e5b2-4e24-a9d3-fd476457c570
 # ╠═23589a74-1049-482a-92a1-5dcdab01f700
 # ╟─8236c3c0-decf-4d77-bbae-e2820c487965
@@ -840,20 +1026,6 @@ end
 # ╠═f600462f-b68f-48f3-8f4e-b7b253db38b3
 # ╠═70ef3d79-a202-4615-9849-9aa8a98a406d
 # ╠═62f15b33-78b9-4997-9f57-15859470f24d
-# ╟─b62249e0-2b70-4721-96e9-fb66205f20da
-# ╠═20d69d51-4182-470c-9b88-e0da43d1cc16
-# ╠═55253db7-4410-4fab-adb5-f82aa705d3d9
-# ╟─0f0dae8f-150d-4382-8b73-34cb42b5e705
-# ╠═387cd0e4-6887-4ebf-ab8f-59607e01d15f
-# ╟─f0427f12-57fb-4632-96be-304b858545fd
-# ╠═86fc4031-b342-48da-9e92-263b69cb03b8
-# ╠═8ec5eaee-5f39-4633-a6cf-777aba872b26
-# ╠═55575356-834c-4850-b84f-353d34ddde19
-# ╠═7e1f10bd-8b39-49e0-be75-e0108cc70c7a
-# ╟─7e55d699-8cbe-4bd4-8bb0-eb45c1e21e70
-# ╠═85fe6d7f-d2b1-4606-958f-cba8fcdd385f
-# ╟─6427f4e8-e232-43ae-84a2-6c789468da67
-# ╠═f75d7d99-8abd-4a64-9432-62540bedb9aa
 # ╟─87dfa45a-ae47-4a1e-a454-818073a25ad9
 # ╟─c03647eb-d2e9-40f6-b627-a690284421e3
 # ╠═d0959d43-bfcd-44a4-9c12-eccd6f3f351c
