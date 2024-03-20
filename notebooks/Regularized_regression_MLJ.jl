@@ -156,6 +156,13 @@ So far, we have fitted a Random Forest regression model using default hyperparam
 In general though, prediction should be based on a model where these hyperparameters are tuned for a specific dataset. See the [Tuning models](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/) page in the MLJ documentation for details.
 "
 
+# ╔═╡ 5b3a085e-28eb-4894-be46-cf8e286e8571
+md"
+### Exercise
+
+In the model above we used *all* features (genes) as predictors in the model. Can you fit a Random Forest regressor that only uses features with absolute correlation greater than 0.1, similar to the `Regularized_regression_Glmnet.jl` notebook? Remember that feature selection must be done on the training samples only to prevent data leakage!
+"
+
 # ╔═╡ Cell order:
 # ╟─ad1f0212-c412-11ee-220f-391425de7e32
 # ╠═ada02ef3-ca52-4b63-a138-fa084904fd39
@@ -186,3 +193,4 @@ In general though, prediction should be based on a model where these hyperparame
 # ╟─e66465f8-857b-4942-a28c-f152a82d7a31
 # ╠═bd2df233-3789-4f3d-afba-87a2da63403c
 # ╟─7d6c3437-361a-4d3e-87ef-b04029417950
+# ╟─5b3a085e-28eb-4894-be46-cf8e286e8571
