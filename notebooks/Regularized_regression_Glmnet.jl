@@ -67,6 +67,9 @@ X = open(Vector{UInt8}, tree["CCLE-expr.csv"]) do buf
            CSV.read(buf, DataFrame)
        end;
 
+# ╔═╡ 71ba55fa-280b-4993-a70b-da0763d0a4c1
+size(X)
+
 # ╔═╡ a391c536-44a9-4a06-9f8f-79bf60275018
 md"
 ### Modelling the response to PD-0325901
@@ -296,6 +299,7 @@ The documentation of [GLMNet](https://github.com/JuliaStats/GLMNet.jl) explains 
 # ╠═fc0d9eb1-ed41-46c6-b5a1-9ff35fa1789d
 # ╠═46b51265-37fa-47d1-b494-b4c8564380b8
 # ╠═e006f801-89e1-4b3a-8680-6fc458819877
+# ╠═71ba55fa-280b-4993-a70b-da0763d0a4c1
 # ╟─a391c536-44a9-4a06-9f8f-79bf60275018
 # ╠═005ae139-18ac-47a6-a7bd-a84a4e8d72d1
 # ╠═fa8c02f1-70f5-42d4-acb7-791cc3cae92d

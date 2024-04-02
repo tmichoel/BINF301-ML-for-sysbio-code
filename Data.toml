@@ -57,3 +57,22 @@ uuid="10016b00-308e-48cf-a62b-4e18672d7ce6"
     # Path with posix `/` separators.
     # Use @__DIR__ for paths relative to Data.toml
     path="@__DIR__/data/processed/Mouse_V1_ALM"
+
+[[datasets]]
+# Some alphanumeric name (can include spaces and underscores)
+name="Mouse_hypothal_spatial"
+# Optional description
+description="Spatial gene expression data."
+
+# A unique ID. Generate with UUIDs.uuid4()
+uuid="934a2e48-1191-4755-a815-741460cbde44"
+
+    # Storage location
+    [datasets.storage]
+    # The name of the storage driver.
+    driver="FileSystem"
+    # Data stored in FileSystem is either Blob (a file) or BlobTree (a directory/folder)
+    type="Blob"
+    # Path with posix `/` separators.
+    # Use @__DIR__ for paths relative to Data.toml
+    path="@__DIR__/data/processed/Mouse_hypothal_spatial/mouse_hypothal_spatial_gene_expression.csv"
