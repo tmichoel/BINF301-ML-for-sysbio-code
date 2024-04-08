@@ -37,9 +37,6 @@ begin
 	using SmoothingSplines
 end
 
-# ╔═╡ f95be6d0-ed46-4bbb-acae-ecffaa49bd4e
-using MLJ
-
 # ╔═╡ 37341592-c0e8-11ee-2da8-87d81712f94f
 md"# Statistical significance for genomewide studies
 ## Setup the environment
@@ -363,41 +360,6 @@ begin
 	plot(p1, p2, p3, p4, layout=l)
 end
 
-# ╔═╡ 1b626d11-ba23-453b-affe-cc82c48886d5
-selected_genes = findall(pₜ.<1e-4)
-
-# ╔═╡ 870e1df7-ea64-4c5a-88d2-63be71b74302
-X = dfg[:,selected_genes];
-
-# ╔═╡ 76e69cd9-ba79-41c7-8ded-d2cb8014d2b1
-begin
-	y = zeros(Int8,nrow(X));
-	y[trip_neg] .= 1;
-	y = coerce(y,OrderedFactor)
-end
-
-# ╔═╡ df818a24-5eb6-4de4-a4b9-868e6217c30f
-# ╠═╡ show_logs = false
-NuSVC = @load NuSVC pkg=LIBSVM
-
-# ╔═╡ 9a7499a2-2dac-49c6-a1ef-8f5b917b40c1
-train, test = partition(eachindex(y), 0.8; shuffle=true);
-
-# ╔═╡ db9c973b-d8f8-4aed-9777-f312c5a10f8b
-doc("NuSVC",pkg="LIBSVM")
-
-# ╔═╡ e0869169-80f9-42fb-94f0-75e8c5d197cf
-mach = machine(NuSVC(),X,y)
-
-# ╔═╡ 8d1b25ff-f2a3-46c8-8f6a-4194d959450a
-fit!(mach, rows=train)
-
-# ╔═╡ 42f428af-453c-4c68-9616-cc30cad2f3af
-yhat = MLJ.predict(mach, rows=test)
-
-# ╔═╡ d0ed97ad-5634-4d47-a01a-7cef3d938afb
-freqtable(y[test],yhat)
-
 # ╔═╡ Cell order:
 # ╠═37341592-c0e8-11ee-2da8-87d81712f94f
 # ╠═16a821c6-34a6-4ad2-9e89-159cebddf7d6
@@ -459,14 +421,3 @@ freqtable(y[test],yhat)
 # ╠═c962812a-b47d-4eea-ab59-8e80fc327b2b
 # ╟─a239eb85-9517-4ad2-96e1-9822de8b2834
 # ╠═f8952103-dd33-4296-bf0a-409c8195d21f
-# ╠═1b626d11-ba23-453b-affe-cc82c48886d5
-# ╠═870e1df7-ea64-4c5a-88d2-63be71b74302
-# ╠═76e69cd9-ba79-41c7-8ded-d2cb8014d2b1
-# ╠═f95be6d0-ed46-4bbb-acae-ecffaa49bd4e
-# ╠═df818a24-5eb6-4de4-a4b9-868e6217c30f
-# ╠═9a7499a2-2dac-49c6-a1ef-8f5b917b40c1
-# ╠═db9c973b-d8f8-4aed-9777-f312c5a10f8b
-# ╠═e0869169-80f9-42fb-94f0-75e8c5d197cf
-# ╠═8d1b25ff-f2a3-46c8-8f6a-4194d959450a
-# ╠═42f428af-453c-4c68-9616-cc30cad2f3af
-# ╠═d0ed97ad-5634-4d47-a01a-7cef3d938afb
