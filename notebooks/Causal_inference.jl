@@ -19,7 +19,7 @@ begin
 	using DataFrames
 	using GLM
 	using LinearAlgebra
-	using CairoMakie
+	using GLMakie
 	using LaTeXStrings
 end
 
@@ -51,7 +51,8 @@ To restrict the space of possible models that need to be considered, a number of
 
 If we assume that there are **no unobserved factors**, there are 5 possible models satisfying assumptions 1-4 (see figure below). If we allow for the **presence of unobserved factors**, we have the same 5 models with an additional unobserved ``U`` having a causal effect on ``X`` and ``Y``, plus one more model without an edge between ``X`` and ``Y`` where all of their correlation is explained by ``U`` (see figure).
 
-![Causal models figure]()
+![Causal models figure](https://raw.githubusercontent.com/tmichoel/BINF301-ML-for-sysbio-code/main/notebooks/causal_models.png)
+
 
 Below each model in the figure, some of the key conditional independences implied by the model are shown, using the mathematical notation ``⫫`` for "is independent of", ``∣`` for "conditional on", ``∧`` for "and", and ``¬`` for "it is not the case that".
 
@@ -560,7 +561,7 @@ If you are convinced by the above arguments and have some molecular QTL data wai
 """
 
 # ╔═╡ Cell order:
-# ╠═cd2140c0-ca5a-11ee-2721-ef7db51463b0
+# ╟─cd2140c0-ca5a-11ee-2721-ef7db51463b0
 # ╠═947d626d-f39b-4100-8a3e-fcf087caa355
 # ╠═7d74bb79-12ad-4329-a0b0-7d0bfe0fd812
 # ╠═50ea2369-6afb-43a2-9bc4-64157bc6cf76

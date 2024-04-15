@@ -62,6 +62,9 @@ begin
 	df_expr = nothing
 end
 
+# ╔═╡ 5524ba5a-15b0-4f9b-b33e-e8ada27eaeef
+nnz(counts)  / prod(size(counts))
+
 # ╔═╡ 4d5b6a30-9b89-494b-b4ec-b7c80078df27
 md"
 Read the gene annotation;
@@ -91,6 +94,12 @@ We start by computing the library depth per million for each cell as it will be 
 
 # ╔═╡ 457a67ef-22d8-4e7b-b3ff-50bf071f7850
 libraryDepth = sum(counts, dims=1) / 1e6;
+
+# ╔═╡ 8fa30134-6b07-4bb5-a155-a7b70f40218a
+histogram(libraryDepth)
+
+# ╔═╡ b29d6140-c74f-47f7-82fb-36e1691f2d66
+
 
 # ╔═╡ 7437fb10-9a0a-4ef7-89c4-b939f783255f
 md"""
@@ -301,16 +310,19 @@ end
 # ╠═a55398f6-f9cc-4ba7-adf0-0f1c85405caa
 # ╟─f324e478-11d4-4b9e-a839-0d73d30042ba
 # ╠═c6fabbae-6e90-458c-b121-8615ead04f8a
+# ╠═5524ba5a-15b0-4f9b-b33e-e8ada27eaeef
 # ╟─4d5b6a30-9b89-494b-b4ec-b7c80078df27
 # ╠═3ce46687-f16f-4bdc-a0ad-3c386b2c16d7
 # ╟─6c3fc69c-c29f-44dc-86f9-067ecbd2f990
 # ╠═dfdd9693-e3ef-4371-a7de-c7251c04df35
 # ╟─30c84cf7-2ead-417e-8183-e11530f7a5c9
 # ╠═457a67ef-22d8-4e7b-b3ff-50bf071f7850
+# ╠═8fa30134-6b07-4bb5-a155-a7b70f40218a
+# ╠═b29d6140-c74f-47f7-82fb-36e1691f2d66
 # ╟─7437fb10-9a0a-4ef7-89c4-b939f783255f
 # ╟─c68e367d-8788-44f5-af03-af14e533ad8f
 # ╠═4112422d-7472-40ea-8a1e-6a2cb66d1776
-# ╠═e1c71a60-696e-4523-a5d3-de7cd5c431c2
+# ╟─e1c71a60-696e-4523-a5d3-de7cd5c431c2
 # ╠═d695a1a3-7109-40c6-99d1-21924023a682
 # ╟─48b67b53-4aaf-4f38-b09f-598d98cc549b
 # ╠═d1506893-fe0a-4471-9a8c-03cf2e345a85

@@ -2,7 +2,7 @@
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "8512a31001beeeaec84201299bf81b4f24ea8e9b"
+project_hash = "e57b331313cf668be26e44acdffc188d1ff0e4fd"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -2299,8 +2299,8 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 version = "1.10.0"
 
 [[deps.SpatialOmicsGPs]]
-deps = ["LinearAlgebra", "Optim", "Random", "Statistics"]
-git-tree-sha1 = "888030c05cd2a6927a3e191a098638560acd2870"
+deps = ["Distances", "KernelFunctions", "LinearAlgebra", "Optim", "Random", "Statistics"]
+git-tree-sha1 = "5c8636bc8cdfc50ee72913cb6f33c1777eba8990"
 repo-rev = "main"
 repo-url = "https://github.com/tmichoel/SpatialOmicsGPs.jl.git"
 uuid = "e145bb07-96d9-421f-b0a2-c579a69b21bf"
