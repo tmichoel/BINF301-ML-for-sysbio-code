@@ -301,11 +301,11 @@ begin
 end
 
 # ╔═╡ Cell order:
-# ╟─4e1b5250-cf2f-11ee-2c28-372723b57034
+# ╠═4e1b5250-cf2f-11ee-2c28-372723b57034
 # ╠═964c81da-2127-492c-b813-34191a45c487
 # ╠═10e0e352-a516-4a92-b5ab-48bd81e06d0c
 # ╠═7206ec51-a609-4ca4-b6dc-92b4781bbed1
-# ╟─7c36ca21-eb71-4839-8dde-57efac1cac5a
+# ╠═7c36ca21-eb71-4839-8dde-57efac1cac5a
 # ╠═f458c335-0ba3-4ed6-bf2d-7d847667ce26
 # ╠═a55398f6-f9cc-4ba7-adf0-0f1c85405caa
 # ╟─f324e478-11d4-4b9e-a839-0d73d30042ba

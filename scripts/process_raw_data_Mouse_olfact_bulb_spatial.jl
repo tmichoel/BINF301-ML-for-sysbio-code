@@ -34,5 +34,5 @@ select!(df, Not(:Column1))
 insertcols!(df, 1, :x => df_coord.x, :y => df_coord.y)
 
 # Save the processed data
-fname_out = datadir("processed","Mouse_olfact_bulb_spatial","Rep11_MOB_count_matrix-1_processed.csv")
+fname_out = datadir("processed","Mouse_olfact_bulb_spatial","Mouse_olfact_bulb_spatial_gene_expression_Rep11.csv")
 CSV.write(fname_out, df);
