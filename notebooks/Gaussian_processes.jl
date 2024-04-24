@@ -18,6 +18,7 @@ begin
 	using DataSets
 	using Statistics
 	using StatsBase
+	using KernelFunctions
 	using SpatialOmicsGPs
 	using GLMakie
 end
