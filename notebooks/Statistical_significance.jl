@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.41
 
 using Markdown
 using InteractiveUtils
@@ -36,6 +36,9 @@ begin
 	using HypothesisTests
 	using SmoothingSplines
 end
+
+# ╔═╡ 90811c68-978c-4aaf-bad0-60ec0a1b92a7
+using MLJ
 
 # ╔═╡ 37341592-c0e8-11ee-2da8-87d81712f94f
 md"# Statistical significance for genomewide studies
@@ -86,6 +89,12 @@ df_expr = open(Vector{UInt8}, tree["TCGA-BRCA-exp-348-expr.csv"]) do buf
 
 # ╔═╡ 5847f0c6-266d-4e01-ae7c-3ee2dc7b8c5c
 ns,ng = size(df_expr);
+
+# ╔═╡ 43f98ac8-e964-4190-af6e-e137ce92022b
+sc = schema(df_expr)
+
+# ╔═╡ 48ef504f-f81c-44b8-9f18-9a4d56a3981a
+unique(sc.scitypes)
 
 # ╔═╡ 55052938-f038-487a-a9cd-39b492186f2a
 md"
@@ -375,6 +384,9 @@ end
 # ╠═f0c178b3-e1c0-49ae-927d-88bd0656a21e
 # ╠═f98b3f5c-511c-4057-8b85-ca1d7b8b104a
 # ╠═5847f0c6-266d-4e01-ae7c-3ee2dc7b8c5c
+# ╠═90811c68-978c-4aaf-bad0-60ec0a1b92a7
+# ╠═43f98ac8-e964-4190-af6e-e137ce92022b
+# ╠═48ef504f-f81c-44b8-9f18-9a4d56a3981a
 # ╟─55052938-f038-487a-a9cd-39b492186f2a
 # ╠═2d6a9c9f-f1a2-4aa7-aba3-fcd1cce6236b
 # ╠═09ee5cf8-2dd4-4c3a-93e9-7904e568de32

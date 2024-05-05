@@ -6,6 +6,7 @@ using CSV
 using XLSX
 using GLM
 using CategoricalArrays
+using Arrow
 
 
 
@@ -130,6 +131,10 @@ id2name = Dict(zip(id_array, name_array))
 
 expr_new_names =  [x in keys(id2name) ? id2name[x] : x for x in names(df_expr)];
 rename!(df_expr, expr_new_names)
+rename!(df_expr_adj, expr_new_names)
+
+df_eqtl.gene = [x in keys(id2name) ? id2name[x] : x for x in df_eqtl.gene]
+rename!(df_eqtl, :gene => :Gene, :pmarker => :SNP)
 
 """
 Process GRN data from Yeastract
@@ -137,23 +142,72 @@ Process GRN data from Yeastract
 fGRN_binding = datadir("raw", "Yeast_GRN", "Yeastract","onlyDNABinding_RegulationMatrix_Documented_2020511.csv");
 fGRN_expression = datadir("raw", "Yeast_GRN", "Yeastract","Expr_TF_act_OR_inh_RegulationMatrix_Documented_2020511.csv");
 
-df_GRN_binding = DataFrame(CSV.File(fGRN_binding))
-df_GRN_expression = DataFrame(CSV.File(fGRN_expression))
+df_GRN_binding = permutedims(DataFrame(CSV.File(fGRN_binding)),1)
+df_GRN_expression =  permutedims(DataFrame(CSV.File(fGRN_expression)),1)
 
 
+# Convert protein names to gene names in the GRN columns
+TF_binding_names = [uppercase(x[1:end-1]) for x in names(df_GRN_binding)]
+TF_binding_names[1] = "Gene"
+rename!(df_GRN_binding, TF_binding_names)
 
-               
+TF_expression_names = [uppercase(x[1:end-1]) for x in names(df_GRN_expression)]
+TF_expression_names[1] = "Gene"
+rename!(df_GRN_expression, TF_expression_names)
+
+"""
+Filter all datasets to a common set of genes
+"""
+common_genes = intersect(names(df_expr), df_GRN_binding.Gene, df_GRN_expression.Gene)
+
+# expression data for common genes
+select!(df_expr, common_genes)
+select!(df_expr_adj, common_genes)
+
+# eQTLs and GRN rows for common genes
+subset!(df_eqtl, :Gene => x ->  in.(x, Ref(common_genes)))
+subset!(df_GRN_binding, :Gene => x ->  in.(x, Ref(common_genes)))
+subset!(df_GRN_expression, :Gene => x ->  in.(x, Ref(common_genes)))
+
+# GRN columns for common genes
+common_TF_binding_names = ["Gene"; intersect(TF_binding_names, common_genes)]
+common_TF_expression_names = ["Gene"; intersect(TF_expression_names, common_genes)]
+select!(df_GRN_binding, common_TF_binding_names)
+select!(df_GRN_expression, common_TF_expression_names)
+
+# Keep only genotype data for SNPs in eQTLs
+select!(df_geno, intersect(names(df_geno), df_eqtl.SNP))
+
+"""
+Convert GRN dataframes to dataframes with gene pairs
+"""
+df_GRN_binding_pairs = subset(stack(df_GRN_binding, Not(:Gene)), :value => x -> x .> 0);
+rename!(df_GRN_binding_pairs, :Gene => :Target, :variable => :Source, :value => :Binding)
+
+df_GRN_expression_pairs = subset(stack(df_GRN_expression, Not(:Gene)), :value => x -> x .> 0);
+rename!(df_GRN_expression_pairs, :Gene => :Target, :variable => :Source, :value => :Perturbation);
+
+# Put Source in first column
+df_GRN_binding_pairs = df_GRN_binding_pairs[:, [:Source, :Target, :Binding]]
+df_GRN_expression_pairs = df_GRN_expression_pairs[:, [:Source, :Target, :Perturbation]]
+
 """
 Save data to processed directory
 """
-fexpr_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-expr.csv");
-CSV.write(fexpr_out, df_expr)
+fexpr_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-expr.arrow");
+Arrow.write(fexpr_out, df_expr);
 
-fexpr_adj_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-expr_adj.csv");
-CSV.write(fexpr_adj_out, df_expr_adj)
+fexpr_adj_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-expr_adj.arrow");
+Arrow.write(fexpr_adj_out, df_expr_adj);
 
-fgeno_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-geno.csv");
-CSV.write(fgeno_out, df_geno)
+fgeno_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-geno.arrow");
+Arrow.write(fgeno_out, df_geno);
 
-feqtl_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-eQTL.csv");
-CSV.write(feqtl_out, df_eqtl)
+feqtl_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-eQTL.arrow");
+Arrow.write(feqtl_out, df_eqtl);
+
+fGRN_binding_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-GRN_binding.arrow");
+Arrow.write(fGRN_binding_out, df_GRN_binding_pairs);
+
+fGRN_expression_out = datadir("processed", "Yeast_GRN", "Yeast_GRN-GRN_perturbation.arrow");
+Arrow.write(fGRN_expression_out, df_GRN_expression_pairs);
