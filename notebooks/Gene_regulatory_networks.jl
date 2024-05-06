@@ -22,6 +22,9 @@ begin
 	using StatsBase
 	using Distributions
 	using StatsPlots, LaTeXStrings
+	using Graphs
+	import GLMakie
+	import GraphMakie
 	using PlutoUI
 	using Printf
 end
@@ -95,7 +98,7 @@ We will reconstruct and evaluate gene regulatory networks for a subset of $(leng
 md"Filter the eQTL data to keep only eQTLs for the common TFs:"
 
 # ╔═╡ dca0b3c4-0e20-4c17-a706-33df9a047cce
-df_eqtl_TF = subset(df_eqtl, :Gene => x ->  in.(x, Ref(TF_common)))
+df_eqtl_TF = subset(df_eqtl, :Gene => x ->  in.(x, Ref(TF_common)));
 
 # ╔═╡ c9b24374-85c5-42df-8131-fbd8f5d3aa51
 md"Filter the GRNs to keep only targets of the common Ts:"
@@ -111,6 +114,9 @@ md"Keep also a GRN that contains only targets that are in both the DNA binding a
 
 # ╔═╡ e74fed5f-6a4c-47bd-a1f2-d19510c2c827
 df_GRN_common = innerjoin(df_GRN_binding_sub,df_GRN_perturbation_sub, on = [:Source, :Target]);
+
+# ╔═╡ 3cdd8b4e-b6f7-4472-8218-a575b3074de6
+md"Note that only around $(nrow(df_GRN_common))  out of of $(nrow(df_GRN_binding_sub)) DNA binding targets are also perturbation targets!"
 
 # ╔═╡ 985daec1-3bbd-478d-b416-6cb1dd4fedf0
 md"""
@@ -272,7 +278,7 @@ for k in eachindex(TF_common)
 	n = length(set_predicted)
 	x = length(intersect(set_true,set_predicted))
 	# p-value
-	hg_pval_pert[k] = ccdf( Hypergeometric(s,f,n), x )
+	hg_pval_pert[k] = -logccdf( Hypergeometric(s,f,n), x )
 end
 
 # ╔═╡ 2de0a13d-9762-43d5-b8e7-44fef0942409
@@ -293,21 +299,38 @@ for k in eachindex(TF_common)
 	n = length(set_predicted)
 	x = length(intersect(set_true,set_predicted))
 	# p-value
-	hg_pval_bind[k] = ccdf( Hypergeometric(s,f,n), x )
+	hg_pval_bind[k] = -logccdf( Hypergeometric(s,f,n), x )
 end
 
 # ╔═╡ 54b3bedd-ece6-465e-9e66-f66cf3ad9885
-sort!( DataFrame(:TF => TF_common, :pvalue_pert => hg_pval_pert, :pvalue_bind => hg_pval_bind), :pvalue_pert )
+sort!( DataFrame(:TF => TF_common, :log10pval_pert => hg_pval_pert, :log10pval_bind => hg_pval_bind), :log10pval_pert, rev=true )
 
 # ╔═╡ e9ac5e0e-b069-4f05-858e-9a40526335e9
 md"Compare the enrichment p-values:"
 
 # ╔═╡ a47732b0-012b-4090-9e73-51068b66e9bf
 begin
-	scatter(-log10.(hg_pval_bind), -log10.(hg_pval_pert), label="")
+	scatter(-(hg_pval_bind), -(hg_pval_pert), label="")
 	xlabel!(L"Target enrichment DNA binding ($-\log_{10} p$)")
 	ylabel!(L"Target enrichment perturbation ($-\log_{10} p$)")
 end
+
+# ╔═╡ 99a96221-c1e8-4153-9996-096f0a105d5c
+md"""
+## Bayesian network reconstruction
+"""
+
+# ╔═╡ 50e4ee42-7ba4-47e4-9c67-6e6cec09ac43
+dP_IV_sub = subset(dP_IV, :qvalue => x -> x.< fdcut_IV);
+
+# ╔═╡ fc7dab26-f172-4b48-b8de-dca8bd2f320e
+subset!(dP_IV_sub, :Target => x -> in.(x, Ref(TF_common)))
+
+# ╔═╡ 4ab0cd8c-afdc-4254-842a-1245fac9d82c
+G, gene2idx = dagfindr!(dP_IV_sub)
+
+# ╔═╡ e099e25a-0fac-426a-8c2a-e7782ade56a2
+GraphMakie.graphplot(G)
 
 # ╔═╡ Cell order:
 # ╠═73f8fd00-093c-11ef-3d96-6f1f3b3df110
@@ -337,6 +360,7 @@ end
 # ╠═feab1bcf-8180-48ac-8794-f382ab9a114e
 # ╟─9bce6489-1bef-4ef3-8dfa-e2b5df7d0201
 # ╠═e74fed5f-6a4c-47bd-a1f2-d19510c2c827
+# ╟─3cdd8b4e-b6f7-4472-8218-a575b3074de6
 # ╟─985daec1-3bbd-478d-b416-6cb1dd4fedf0
 # ╠═d95651d8-6313-472d-bce0-a335f89a4155
 # ╠═8869c152-44b1-4848-9cb4-89d530aaa4bc
@@ -376,4 +400,9 @@ end
 # ╠═fb7cb36d-f45c-47b4-91ce-43d8e2f40d77
 # ╠═54b3bedd-ece6-465e-9e66-f66cf3ad9885
 # ╟─e9ac5e0e-b069-4f05-858e-9a40526335e9
-# ╟─a47732b0-012b-4090-9e73-51068b66e9bf
+# ╠═a47732b0-012b-4090-9e73-51068b66e9bf
+# ╠═99a96221-c1e8-4153-9996-096f0a105d5c
+# ╠═50e4ee42-7ba4-47e4-9c67-6e6cec09ac43
+# ╠═fc7dab26-f172-4b48-b8de-dca8bd2f320e
+# ╠═4ab0cd8c-afdc-4254-842a-1245fac9d82c
+# ╠═e099e25a-0fac-426a-8c2a-e7782ade56a2

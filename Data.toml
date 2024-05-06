@@ -95,3 +95,22 @@ uuid="a85df92b-2cd4-4bd3-9491-8318c702abab"
     # Path with posix `/` separators.
     # Use @__DIR__ for paths relative to Data.toml
     path="@__DIR__/data/processed/Mouse_olfact_bulb_spatial/mouse_olfact_bulb_spatial_gene_expression_Rep11.csv"
+
+[[datasets]]
+# Some alphanumeric name (can include spaces and underscores)
+name="Yeast_GRN"
+# Optional description
+description="Gene expression, genotype, and eQTL data from Albert et al. (2018) (https://doi.org/10.7554/eLife.35471.001) and transcription factor DNA binding and perturbation targets from Yeastract (http://www.yeastract.com/)"
+
+# A unique ID. Generate with UUIDs.uuid4()
+uuid="e7221b68-95d4-498a-8916-6453b9027def"
+
+    # Storage location
+    [datasets.storage]
+    # The name of the storage driver.
+    driver="FileSystem"
+    # Data stored in FileSystem is either Blob (a file) or BlobTree (a directory/folder)
+    type="BlobTree"
+    # Path with posix `/` separators.
+    # Use @__DIR__ for paths relative to Data.toml
+    path="@__DIR__/data/processed/Yeast_GRN"
