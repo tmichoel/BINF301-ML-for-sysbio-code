@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.41
 
 using Markdown
 using InteractiveUtils
@@ -307,7 +307,7 @@ The documentation of [GLMNet](https://github.com/JuliaStats/GLMNet.jl) explains 
 # ╟─8a000026-152e-44f9-a2f9-f6d44cf3250e
 # ╠═92a37123-b262-4cd4-80b2-fa75a8d51b29
 # ╟─88521c4f-cd8d-484f-a4b6-4e735702fb9d
-# ╟─0c1bc2c8-cbc5-4af2-94ba-004dd7272e57
+# ╠═0c1bc2c8-cbc5-4af2-94ba-004dd7272e57
 # ╠═3ed5819f-b5f7-413e-a50d-71faa4a9bc0e
 # ╠═ae6af865-a992-4aee-a1d4-c4db8127378a
 # ╟─f2b1a375-236e-429a-b3f9-64dea50f9a2f
@@ -315,7 +315,7 @@ The documentation of [GLMNet](https://github.com/JuliaStats/GLMNet.jl) explains 
 # ╟─9d2246c6-8d68-449c-b258-58eb914e46f8
 # ╠═826b0d23-bcf7-433c-82f7-428a39a044e0
 # ╟─e071ecf4-2441-4bf5-8830-9546428e27fa
-# ╟─03aff45f-206d-44ad-a587-1a8113056f85
+# ╠═03aff45f-206d-44ad-a587-1a8113056f85
 # ╠═6519f119-9f91-4ca3-b9ec-d9116149cae3
 # ╟─caabc7ea-2f25-4a88-9621-133e384a08d0
 # ╠═2fe8a865-00c4-431b-a070-916d0d31a070
@@ -343,7 +343,7 @@ The documentation of [GLMNet](https://github.com/JuliaStats/GLMNet.jl) explains 
 # ╠═bb709f8a-27c4-4371-83f2-7f61d0c473b2
 # ╠═f8aeb775-ca83-4dff-859c-168b5ae5a342
 # ╠═c4a06b6b-544a-4b67-8d97-7ec5d774365e
-# ╠═831640f6-d028-423e-8bdf-d831b5aa2946
+# ╟─831640f6-d028-423e-8bdf-d831b5aa2946
 # ╠═75f4c955-72d9-4b0e-b0ec-2a20adcf72e7
 # ╟─aeff7e90-3af6-4cf7-a5e3-e365b1aa96e3
-# ╠═2c755683-7f93-4bbd-81e3-0c5b96ee7bab
+# ╟─2c755683-7f93-4bbd-81e3-0c5b96ee7bab

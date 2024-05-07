@@ -37,9 +37,6 @@ begin
 	using SmoothingSplines
 end
 
-# ╔═╡ 90811c68-978c-4aaf-bad0-60ec0a1b92a7
-using MLJ
-
 # ╔═╡ 37341592-c0e8-11ee-2da8-87d81712f94f
 md"# Statistical significance for genomewide studies
 ## Setup the environment
@@ -89,12 +86,6 @@ df_expr = open(Vector{UInt8}, tree["TCGA-BRCA-exp-348-expr.csv"]) do buf
 
 # ╔═╡ 5847f0c6-266d-4e01-ae7c-3ee2dc7b8c5c
 ns,ng = size(df_expr);
-
-# ╔═╡ 43f98ac8-e964-4190-af6e-e137ce92022b
-sc = schema(df_expr)
-
-# ╔═╡ 48ef504f-f81c-44b8-9f18-9a4d56a3981a
-unique(sc.scitypes)
 
 # ╔═╡ 55052938-f038-487a-a9cd-39b492186f2a
 md"
@@ -212,8 +203,6 @@ Now compute the empirical p-values. Move the slider to select the number of rand
 "
 
 # ╔═╡ f86e3d22-2bf7-4e97-97ce-96a741629305
-# ╠═╡ disabled = true
-#=╠═╡
 begin
 	trand = zeros(ng,B);
 	for b = 1:B
@@ -221,22 +210,15 @@ begin
 	    trand[:,b] = map(x -> abs(UnequalVarianceTTest(x[tf], x[.!tf]).t), eachcol(dfg));
 	end
 end
-  ╠═╡ =#
 
 # ╔═╡ 2f582056-41b2-4c04-b482-d924c447d795
-# ╠═╡ disabled = true
-#=╠═╡
 pₑ = map(x -> sum(trand .>= x)./(ng*B), abs.(t));
-  ╠═╡ =#
 
 # ╔═╡ 04e1ea77-a1e9-49f8-b11a-f76ba0f4f406
 md"Compare empirical and theoretical p-values. In this case we see that they coincide perfectly:"
 
 # ╔═╡ 313226f4-dd3e-4a57-92e2-cd543ef93eb9
-# ╠═╡ disabled = true
-#=╠═╡
 scatter(pₜ,pₑ,label="",xlabel="Theoretical p-values",ylabel="Empirical p-values")
-  ╠═╡ =#
 
 # ╔═╡ 003afa7f-612b-4971-bc03-ebc4201d2a4c
 md"
@@ -370,10 +352,10 @@ begin
 end
 
 # ╔═╡ Cell order:
-# ╠═37341592-c0e8-11ee-2da8-87d81712f94f
+# ╟─37341592-c0e8-11ee-2da8-87d81712f94f
 # ╠═16a821c6-34a6-4ad2-9e89-159cebddf7d6
 # ╠═badcc813-66d6-49c0-bc36-c0f659304bd4
-# ╠═e2202af3-670e-4d6f-89c8-26304f0e3ad5
+# ╟─e2202af3-670e-4d6f-89c8-26304f0e3ad5
 # ╠═7e672ab8-7208-406a-8ed1-81ee22a2110d
 # ╟─da338647-0466-4848-a787-f8d6cc6ffdcf
 # ╠═5ed52ecf-d783-4021-af72-1f09d9df1649
@@ -381,12 +363,9 @@ end
 # ╠═1e06ac77-62c6-45ca-8e5c-888d31dd2a11
 # ╟─1401e3be-18a4-4baf-8ae2-9357d9fbb674
 # ╠═8c02f6ca-ff70-4134-b23e-236af499a43d
-# ╠═f0c178b3-e1c0-49ae-927d-88bd0656a21e
+# ╟─f0c178b3-e1c0-49ae-927d-88bd0656a21e
 # ╠═f98b3f5c-511c-4057-8b85-ca1d7b8b104a
 # ╠═5847f0c6-266d-4e01-ae7c-3ee2dc7b8c5c
-# ╠═90811c68-978c-4aaf-bad0-60ec0a1b92a7
-# ╠═43f98ac8-e964-4190-af6e-e137ce92022b
-# ╠═48ef504f-f81c-44b8-9f18-9a4d56a3981a
 # ╟─55052938-f038-487a-a9cd-39b492186f2a
 # ╠═2d6a9c9f-f1a2-4aa7-aba3-fcd1cce6236b
 # ╠═09ee5cf8-2dd4-4c3a-93e9-7904e568de32

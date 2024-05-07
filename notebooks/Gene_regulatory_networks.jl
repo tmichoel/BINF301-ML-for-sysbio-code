@@ -29,6 +29,11 @@ begin
 	using Printf
 end
 
+# ╔═╡ 9516986e-8e3f-4854-a14b-5be09c8b29cc
+md"""
+# Causal gene regulatory network reconstruction in yeast
+"""
+
 # ╔═╡ f0e0d37f-3d70-4060-9499-e6c8955e4c5a
 md"#### Expression data"
 
@@ -168,41 +173,41 @@ end
 # ╔═╡ 512fa917-185b-4864-8703-13527d7f792f
 md"To call this function we need to add the GRN labels to the network predictions:"
 
-# ╔═╡ f069136c-a135-417d-8c97-a8314cae86db
-leftjoin!(dP_cor,df_GRN_perturbation_sub, on = [:Source, :Target]);
-
 # ╔═╡ a2b3b2da-e555-4ecc-9b9b-f3a116ee418c
-leftjoin!(dP_cor,df_GRN_binding_sub, on = [:Source, :Target]);
+if !in(:Binding, propertynames(dP_cor))
+	leftjoin!(dP_cor,df_GRN_binding_sub, on = [:Source, :Target]);
+	dP_cor.Binding[ismissing.(dP_cor.Binding)] .= 0;
+end
 
 # ╔═╡ 31cd3c3e-a4d6-4a55-aa22-81c8638830d8
-dP_cor.Perturbation[ismissing.(dP_cor.Perturbation)] .= 0;
-
-# ╔═╡ 13b29419-9c03-4009-b3c6-7e2827e46ee1
-dP_cor.Binding[ismissing.(dP_cor.Binding)] .= 0;
+if !in(:Perturbation, propertynames(dP_cor))
+	leftjoin!(dP_cor,df_GRN_perturbation_sub, on = [:Source, :Target]);
+	dP_cor.Perturbation[ismissing.(dP_cor.Perturbation)] .= 0;
+end
 
 # ╔═╡ 82528f24-73b2-4b40-a67e-6edc21e1a456
-leftjoin!(dP_IV,df_GRN_binding_sub, on = [:Source, :Target]);
+if !in(:Binding, propertynames(dP_IV))
+	leftjoin!(dP_IV,df_GRN_binding_sub, on = [:Source, :Target]);
+	dP_IV.Binding[ismissing.(dP_IV.Binding)] .= 0;
+end
 
-# ╔═╡ b39728a5-1c69-492a-af66-1f061c1af53f
-leftjoin!(dP_IV,df_GRN_perturbation_sub, on = [:Source, :Target]);
-
-# ╔═╡ 8ca83c0c-8155-4714-9ab2-2b5ed95052c5
-dP_IV.Perturbation[ismissing.(dP_IV.Perturbation)] .= 0;
-
-# ╔═╡ bf67cf03-d86e-4487-9eec-0ac6a5124419
-dP_IV.Binding[ismissing.(dP_IV.Binding)] .= 0;
+# ╔═╡ 13d30daf-a438-4b51-9ff5-6140980bd663
+if !in(:Perturbation, propertynames(dP_IV))
+	leftjoin!(dP_IV,df_GRN_perturbation_sub, on = [:Source, :Target]);
+	dP_IV.Perturbation[ismissing.(dP_IV.Perturbation)] .= 0;
+end
 
 # ╔═╡ 8c337ad9-b0c3-4cb0-847a-145ac54ce534
-leftjoin!(dP_med,df_GRN_binding_sub, on = [:Source, :Target]);
-
-# ╔═╡ 83af7f0a-0135-48b3-900d-d4e439d9caff
-leftjoin!(dP_med,df_GRN_perturbation_sub, on = [:Source, :Target]);
+if !in(:Binding, propertynames(dP_med))
+	leftjoin!(dP_med,df_GRN_binding_sub, on = [:Source, :Target]);
+	dP_med.Binding[ismissing.(dP_med.Binding)] .= 0;
+end
 
 # ╔═╡ 5a4ebce6-204d-407e-a7a9-a12e71b400b0
-dP_med.Perturbation[ismissing.(dP_med.Perturbation)] .= 0;
-
-# ╔═╡ 1303ec2f-b8a8-495c-bd72-bc7f3fe32814
-dP_med.Binding[ismissing.(dP_med.Binding)] .= 0;
+if !in(:Perturbation, propertynames(dP_med))
+	leftjoin!(dP_med,df_GRN_perturbation_sub, on = [:Source, :Target]);
+	dP_med.Perturbation[ismissing.(dP_med.Perturbation)] .= 0;
+end
 
 # ╔═╡ a4b6cb89-d287-433c-9db5-3b3974858796
 md"Now compute the recall and precision vectors:"
@@ -333,6 +338,7 @@ G, gene2idx = dagfindr!(dP_IV_sub)
 GraphMakie.graphplot(G)
 
 # ╔═╡ Cell order:
+# ╟─9516986e-8e3f-4854-a14b-5be09c8b29cc
 # ╠═73f8fd00-093c-11ef-3d96-6f1f3b3df110
 # ╠═485e8c6e-e591-4b33-9110-b8c69e19d194
 # ╠═ea4a72ec-aaaa-44c9-af49-4ca48dde7d29
@@ -369,18 +375,12 @@ GraphMakie.graphplot(G)
 # ╟─6c4b9c2e-2982-4fe2-8391-8133350e932a
 # ╠═15ef9ddb-1d2a-49d8-9975-663a44ec81c8
 # ╟─512fa917-185b-4864-8703-13527d7f792f
-# ╠═f069136c-a135-417d-8c97-a8314cae86db
 # ╠═a2b3b2da-e555-4ecc-9b9b-f3a116ee418c
 # ╠═31cd3c3e-a4d6-4a55-aa22-81c8638830d8
-# ╠═13b29419-9c03-4009-b3c6-7e2827e46ee1
 # ╠═82528f24-73b2-4b40-a67e-6edc21e1a456
-# ╠═b39728a5-1c69-492a-af66-1f061c1af53f
-# ╠═8ca83c0c-8155-4714-9ab2-2b5ed95052c5
-# ╠═bf67cf03-d86e-4487-9eec-0ac6a5124419
+# ╠═13d30daf-a438-4b51-9ff5-6140980bd663
 # ╠═8c337ad9-b0c3-4cb0-847a-145ac54ce534
-# ╠═83af7f0a-0135-48b3-900d-d4e439d9caff
 # ╠═5a4ebce6-204d-407e-a7a9-a12e71b400b0
-# ╠═1303ec2f-b8a8-495c-bd72-bc7f3fe32814
 # ╟─a4b6cb89-d287-433c-9db5-3b3974858796
 # ╠═c0d33354-97fe-4609-a176-5c3ea8875955
 # ╠═53f0ad15-5196-4849-8c9a-f4a017696e58

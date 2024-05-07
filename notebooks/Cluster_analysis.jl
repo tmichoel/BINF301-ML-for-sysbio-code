@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.41
 
 using Markdown
 using InteractiveUtils
@@ -125,7 +125,7 @@ In the figure below, we see a histogram of standard deviations of all genes. Mov
 "
 
 # ╔═╡ 0ed193aa-9c4a-4f06-87b4-d81fa1252be5
-@bind sdcut Slider(0:0.1:2)
+@bind sdcut Slider(0:0.1:2,default=0.7)
 
 # ╔═╡ e53173a6-c32e-4ecb-997f-941803b20600
 begin
@@ -220,14 +220,10 @@ In the function below, replace the line `logW=kvec` with the correct computation
 kvec = 1:20
 
 # ╔═╡ 656597ae-6773-47ea-82c4-4543fa409b6e
-#=╠═╡
 logW = kmeans_totalcost(X_std[:,sd.>sdcut]', kvec)
-  ╠═╡ =#
 
 # ╔═╡ 7ecf818a-f356-4dba-82a6-e16fdae1bc06
-#=╠═╡
 plot(kvec, logW, xlabel=L"K", ylabel=L"\log W_K", marker=:circle,label=false)
-  ╠═╡ =#
 
 # ╔═╡ 86c2b9b2-ca4f-49ac-9b04-a7b9d7c2fec8
 md"
@@ -235,9 +231,7 @@ If the kink is hard to see (it usually is!), adding the successive differences i
 "
 
 # ╔═╡ 9e150cca-2bc0-4f38-a97f-116daa46ae97
-#=╠═╡
 plot!(twinx(), diff(logW), ylabel=L"\log W_{K+1} - \log W_K", linecolor=:red, marker=:square, markercolor=:red,label=false)
-  ╠═╡ =#
 
 # ╔═╡ 8a6fb2ac-d4cf-4d4d-b8c9-d3cbe1f19fd9
 md"
@@ -256,18 +250,13 @@ Compute a frequency table showing the numbers of triple negative tumours in each
 "
 
 # ╔═╡ 9e2e4e59-c5c4-41d6-bac4-1784edee94e9
-# ╠═╡ disabled = true
-#=╠═╡
-freqtable(km_opt.assignments,triple_neg);
-  ╠═╡ =#
+freqtable(km_opt.assignments,triple_neg)
 
 # ╔═╡ 12fa001d-3b69-4994-8d3d-f58560118b65
-# ╠═╡ disabled = true
-#=╠═╡
-freqtable(km_opt.assignments,stage);
-  ╠═╡ =#
+freqtable(km_opt.assignments,stage)
 
 # ╔═╡ b0286f6a-3409-4dc0-83eb-cecb26d7fbcf
+# ╠═╡ disabled = true
 #=╠═╡
 function kmeans_totalcost(X, kvec)
 	logW = kvec # Replace this with the correct computation of the total cost value!
@@ -276,12 +265,9 @@ end
   ╠═╡ =#
 
 # ╔═╡ 8f5a8752-dd54-4a66-a83d-7c405e072626
-# ╠═╡ disabled = true
-#=╠═╡
 function kmeans_totalcost(X, kvec)
 	map(k -> log(kmeans(X,k).totalcost), kvec)
 end
-  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╟─6cb72390-b393-11ee-1a18-af78f69f2995
@@ -321,7 +307,7 @@ end
 # ╟─c043f6e3-ada2-4919-ba9b-cfa928bf6239
 # ╟─a9b5eae7-e918-431b-a96c-ca5013143e18
 # ╠═b0286f6a-3409-4dc0-83eb-cecb26d7fbcf
-# ╟─8f5a8752-dd54-4a66-a83d-7c405e072626
+# ╠═8f5a8752-dd54-4a66-a83d-7c405e072626
 # ╠═436e5378-58bc-4bc6-b71d-a899ca56e95d
 # ╠═656597ae-6773-47ea-82c4-4543fa409b6e
 # ╠═7ecf818a-f356-4dba-82a6-e16fdae1bc06
@@ -331,5 +317,5 @@ end
 # ╠═8d032a3e-2132-42c6-9e3a-d27063777242
 # ╠═04439ce4-85b1-4467-b851-d12ace80713e
 # ╟─07b2634d-d3cb-4e9e-bbd7-6758c1eab611
-# ╟─9e2e4e59-c5c4-41d6-bac4-1784edee94e9
-# ╟─12fa001d-3b69-4994-8d3d-f58560118b65
+# ╠═9e2e4e59-c5c4-41d6-bac4-1784edee94e9
+# ╠═12fa001d-3b69-4994-8d3d-f58560118b65

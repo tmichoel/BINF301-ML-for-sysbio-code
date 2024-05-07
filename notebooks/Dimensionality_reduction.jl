@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.41
 
 using Markdown
 using InteractiveUtils
@@ -21,7 +21,7 @@ begin
 	using Statistics
 	using SingleCellProjections
 	using SparseArrays
-	using JLD
+	#using JLD
 	using StatsPlots
 	using LaTeXStrings
 	using TSne
@@ -53,6 +53,7 @@ tree = DataSets.open(dataset("Mouse_V1_ALM"))
 md"Read the single-cell expression data. These data have been prefiltered by discarding all genes with non-zero expression (more than 32 counts) in less that 10 cells, following [Kobak & Berens (2019)](https://doi.org/10.1038/s41467-019-13056-x). The columns in the expression dataframe are the row indices, column indices, and values to create a sparse count matrix where cells are columns and rows are genes. We read the dataframe, do the conversion to a sparse matrix and then discard the dataframe:"
 
 # ╔═╡ c6fabbae-6e90-458c-b121-8615ead04f8a
+# ╠═╡ show_logs = false
 begin
 	io = open(IO, tree["mouse_ALM_VISp_gene_expression.arrow"])
 	stream = Arrow.Stream(io);
@@ -96,10 +97,7 @@ We start by computing the library depth per million for each cell as it will be 
 libraryDepth = sum(counts, dims=1) / 1e6;
 
 # ╔═╡ 8fa30134-6b07-4bb5-a155-a7b70f40218a
-histogram(libraryDepth)
-
-# ╔═╡ b29d6140-c74f-47f7-82fb-36e1691f2d66
-
+histogram(libraryDepth')
 
 # ╔═╡ 7437fb10-9a0a-4ef7-89c4-b939f783255f
 md"""
@@ -318,7 +316,6 @@ end
 # ╟─30c84cf7-2ead-417e-8183-e11530f7a5c9
 # ╠═457a67ef-22d8-4e7b-b3ff-50bf071f7850
 # ╠═8fa30134-6b07-4bb5-a155-a7b70f40218a
-# ╠═b29d6140-c74f-47f7-82fb-36e1691f2d66
 # ╟─7437fb10-9a0a-4ef7-89c4-b939f783255f
 # ╟─c68e367d-8788-44f5-af03-af14e533ad8f
 # ╠═4112422d-7472-40ea-8a1e-6a2cb66d1776
