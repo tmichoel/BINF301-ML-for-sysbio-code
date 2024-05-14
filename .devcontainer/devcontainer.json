@@ -1,19 +1,24 @@
-// More info: https://containers.dev/implementors/json_reference/
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/JuliaLang/devcontainer-templates/tree/main/src/julia
 {
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-18-bullseye",
+	"name": "Julia",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
-	},
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"mads-hartmann.bash-ide-vscode",
-				"EditorConfig.EditorConfig",
-				"foxundermoon.shell-format",
-				"timonwong.shellcheck",
-				"dbaeumer.vscode-eslint"
-			]
+		// A Feature to install Julia via juliaup. More info: https://github.com/JuliaLang/devcontainer-features/tree/main/src/julia.
+		"ghcr.io/julialang/devcontainer-features/julia:1": {
+			"channel": "${templateOption:channel}"
 		}
-	},
-	"postCreateCommand": "npm install -g @devcontainers/cli"
+	}
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
 }
