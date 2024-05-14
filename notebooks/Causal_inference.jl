@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.41
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -19,7 +19,7 @@ begin
 	using DataFrames
 	using GLM
 	using LinearAlgebra
-	using GLMakie
+	using CairoMakie
 	using LaTeXStrings
 end
 
@@ -294,13 +294,13 @@ begin
 	        aspect=AxisAspect(1))
 	    hidespines!(ax)
 	
-	    scatter!(data[data.Z0.==0,2*k+1],data[data.Z0.==0,2*k+2],
+	    CairoMakie.scatter!(data[data.Z0.==0,2*k+1],data[data.Z0.==0,2*k+2],
 	        label="z=0", marker=:circle, color=:black, 
 	        markersize=7)
-	    scatter!(data[data.Z0.==1,2*k+1],data[data.Z0.==1,2*k+2],
+	    CairoMakie.scatter!(data[data.Z0.==1,2*k+1],data[data.Z0.==1,2*k+2],
 	        label="z=1", marker=:xcross, color=:lightblue, 
 	        markersize=12)
-	    scatter!(data[data.Z0.==2,2*k+1],data[data.Z0.==2,2*k+2], 
+	    CairoMakie.scatter!(data[data.Z0.==2,2*k+1],data[data.Z0.==2,2*k+2], 
 	        label="z=2", marker=:cross, color =:red, 
 	        markersize=12)
 	
