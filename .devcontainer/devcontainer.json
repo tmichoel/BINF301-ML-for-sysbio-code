@@ -9,7 +9,20 @@
 	"features": {
 		// A Feature to install Julia via juliaup. More info: https://github.com/JuliaLang/devcontainer-features/tree/main/src/julia.
 		"ghcr.io/julialang/devcontainer-features/julia:1": {
-			"channel": "${templateOption:channel}"
+			"channel": "release"
+		},
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": true,
+			"installOhMyZsh": true,
+			"installOhMyZshConfig": true,
+			"upgradePackages": true,
+			"username": "devcontainer",
+			"userUid": "automatic",
+			"userGid": "1001"
+		},
+		"ghcr.io/devcontainers/features/git:1": {
+			"ppa": true,
+			"version": "latest"
 		}
 	}
 
