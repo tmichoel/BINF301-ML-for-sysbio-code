@@ -216,6 +216,20 @@ In the function below, replace the line `logW=kvec` with the correct computation
 **Hint:** using the `map` function, the result can be computed in a single line. Type `map` in the Live Docs to learn more about this function. If you need help seeing how, the disable the next cell, make the one below visible, and enable it.
 "
 
+# ╔═╡ b0286f6a-3409-4dc0-83eb-cecb26d7fbcf
+# ╠═╡ disabled = true
+#=╠═╡
+function kmeans_totalcost(X, kvec)
+	logW = kvec # Replace this with the correct computation of the total cost value!
+	return logW
+end
+  ╠═╡ =#
+
+# ╔═╡ 8f5a8752-dd54-4a66-a83d-7c405e072626
+function kmeans_totalcost(X, kvec)
+	map(k -> log(kmeans(X,k).totalcost), kvec)
+end
+
 # ╔═╡ 436e5378-58bc-4bc6-b71d-a899ca56e95d
 kvec = 1:20
 
@@ -254,20 +268,6 @@ freqtable(km_opt.assignments,triple_neg)
 
 # ╔═╡ 12fa001d-3b69-4994-8d3d-f58560118b65
 freqtable(km_opt.assignments,stage)
-
-# ╔═╡ b0286f6a-3409-4dc0-83eb-cecb26d7fbcf
-# ╠═╡ disabled = true
-#=╠═╡
-function kmeans_totalcost(X, kvec)
-	logW = kvec # Replace this with the correct computation of the total cost value!
-	return logW
-end
-  ╠═╡ =#
-
-# ╔═╡ 8f5a8752-dd54-4a66-a83d-7c405e072626
-function kmeans_totalcost(X, kvec)
-	map(k -> log(kmeans(X,k).totalcost), kvec)
-end
 
 # ╔═╡ Cell order:
 # ╟─6cb72390-b393-11ee-1a18-af78f69f2995
