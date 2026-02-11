@@ -1,0 +1,19 @@
+{
+  "name": "YY1_GM12878_K562_with_DNase_dataset",
+  "created": "2026-02-11T09:07:58.868486Z",
+  "version": "1.0.0",
+  "description": "Student-ready dataset builder for reproducing Arvey et al. 2012 sequence and DNase models: 1000 YY1 peaks in GM12878 and K562, 100-bp sequences, matched negatives, DNase 5x100bp bins, labels.",
+  "outputs": {
+    "processed/peaks_gm12878_top1000.bed": "Top 1000 YY1 peaks (hg19)",
+    "processed/peaks_k562_top1000.bed": "Top 1000 YY1 peaks (hg19)",
+    "processed/sequences_gm12878_peaks_100bp.fa": "100bp FASTA sequences centered at peak summits",
+    "processed/sequences_k562_peaks_100bp.fa": "100bp FASTA sequences centered at peak summits",
+    "processed/negatives_gm12878_100bp.fa": "+200bp flanking negatives (100bp)",
+    "processed/negatives_k562_100bp.fa": "+200bp flanking negatives (100bp)",
+    "processed/dnase_gm12878_5x100bp.tsv": "DNase signal in 5 bins of 100bp centered at peaks",
+    "processed/dnase_k562_5x100bp.tsv": "DNase signal in 5 bins of 100bp centered at peaks",
+    "processed/labels.tsv": "Unified labels file for ML training",
+    "docs/README.md": "Instructions and citations",
+    "scripts/build_dataset.py": "Reproducible builder that downloads inputs and generates processed files"
+  }
+}

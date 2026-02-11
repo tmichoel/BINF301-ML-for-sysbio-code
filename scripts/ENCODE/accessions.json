@@ -1,0 +1,26 @@
+{
+  "yy1_gm12878_chip": {
+    "experiment": "ENCSR000EUM",
+    "geo_sample": "GSM935482",
+    "narrowpeak_url": "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM935482&format=file&file=GSM935482_hg19_wgEncodeSydhTfbsGm12878Yy1StdPk.narrowPeak.gz"
+  },
+  "yy1_k562_chip": {
+    "experiment": "ENCSR000BMH",
+    "geo_sample": "GSM935368",
+    "narrowpeak_url": "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM935368&format=file&file=GSM935368_hg19_wgEncodeSydhTfbsK562Yy1UcdPk.narrowPeak.gz"
+  },
+  "dnase_gm12878": {
+    "experiment": "ENCSR000EMT",
+    "geo_sample": "GSM736620",
+    "bigwig_url": "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM736620&format=file&file=GSM736620_hg19_wgEncodeUwDnaseGm12878RawRep2.bigWig"
+  },
+  "dnase_k562": {
+    "experiment": "ENCSR000EKS",
+    "geo_sample": "GSM816655",
+    "bigwig_url": "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM816655&format=file&file=GSM816655_hg19_wgEncodeOpenChromDnaseK562SigV2.bigWig"
+  },
+  "reference_genome": {
+    "assembly": "hg19",
+    "fasta_url": "https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/latest/hg19.fa.gz"
+  }
+}

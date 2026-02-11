@@ -1,0 +1,3 @@
+
+Arvey A, Agius P, Noble WS, Leslie C. Sequence and chromatin determinants of cell-type–specific transcription factor binding. Genome Res. 2012;22:1723–1734.
+ENCODE Project Consortium resources used: YY1 ChIP–seq (ENCSR000EUM, ENCSR000BMH); DNase–seq (ENCSR000EMT; ENCSR000EKS); UCSC hg19 reference sequence.
