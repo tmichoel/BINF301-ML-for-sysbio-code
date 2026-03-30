@@ -10,7 +10,7 @@ Expression data
 
 - URL: http://m3d.mssm.edu/norm/
 - Download: E_coli_v4_Build_6.tar.gz
-- Extract: avg\_E\_coli\_v4\_Build\_6\_exps466probes4297.tab
+- Extract: avg_E_coli_v4_Build_6_exps466probes4297.tab
 - Truncate gene names at first \"_\"
 """
 
@@ -24,8 +24,8 @@ select!(dfexpr, Not(1));
 RegulongDB network of known TF - gene interactions
 - URL: https://regulondb.ccg.unam.mx/menu/download/datasets/index.jsp
 - Download: Regulatory Network Interactions > TF - gene interactions
-- Extract file: network\_tf\_gene.txt
-- Remove all comment lines (start with #) and rename file to regulonDB\_network\_tf\_gene.txt
+- Extract file: network_tf_gene.txt
+- Remove all comment lines (start with #) and rename file to regulonDB_network_tf_gene.txt
 - Extract 2nd (TFs) and 4th (target genes) columns, change TF names to start with lowercase
 """
 

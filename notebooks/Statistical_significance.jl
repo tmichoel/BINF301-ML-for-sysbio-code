@@ -1,17 +1,19 @@
 ### A Pluto.jl notebook ###
-# v0.19.41
+# v0.20.23
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-    quote
+    #! format: off
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ 16a821c6-34a6-4ad2-9e89-159cebddf7d6
@@ -94,6 +96,9 @@ md"
 - Triple negative tumours (yes/no)
 - Stage
 "
+
+# ╔═╡ 2b4256e2-b4e0-4400-ab4c-a9079cc560fd
+
 
 # ╔═╡ 2d6a9c9f-f1a2-4aa7-aba3-fcd1cce6236b
 triple_neg = df_clin.:"ER Status" .== "Negative" .&& df_clin.:"PR Status" .== "Negative" .&& df_clin.:"HER2 Final Status" .== "Negative";
@@ -367,6 +372,7 @@ end
 # ╠═f98b3f5c-511c-4057-8b85-ca1d7b8b104a
 # ╠═5847f0c6-266d-4e01-ae7c-3ee2dc7b8c5c
 # ╟─55052938-f038-487a-a9cd-39b492186f2a
+# ╠═2b4256e2-b4e0-4400-ab4c-a9079cc560fd
 # ╠═2d6a9c9f-f1a2-4aa7-aba3-fcd1cce6236b
 # ╠═09ee5cf8-2dd4-4c3a-93e9-7904e568de32
 # ╟─aaf88a83-05d8-4389-8004-ed31366030ac
